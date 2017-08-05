@@ -1,0 +1,26 @@
+$stylevar[htmldoctype]
+<html dir="$stylevar[textdirection]" lang="$stylevar[languagecode]">
+<head>
+    <meta name="keywords" content="$vboptions[keywords]" />
+    <meta name="description" content="$vboptions[description]" />
+    <script src="./js/jquery-1.7.1.min.js" type="text/javascript"></script>
+    <script src="./js/jquery.mousewheel-min.js" type="text/javascript"></script>
+    <script src="./js/jquery.terminal-min.js" type="text/javascript"></script>
+    <script src="./js/main.js" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" href="./css/jquery.terminal.css">
+</head>
+
+<body class="terminal">
+<if condition="$show['member']">
+<script>
+    System.loggedIn = true;
+    System.username = '$bbuserinfo[username]';
+    System.userid = $bbuserinfo[userid];
+</script>
+</if>
+<script>
+    System.bburl = '$vboptions[bburl]';
+</script>
+<div class="terminal-output"/>
+</body>
+</html>
