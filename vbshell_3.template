@@ -4,10 +4,11 @@ $stylevar[htmldoctype]
     <meta name="keywords" content="$vboptions[keywords]" />
     <meta name="description" content="$vboptions[description]" />
     <link rel="stylesheet" type="text/css" href="./css/jquery.terminal.css">
-    <script src="./js/jquery-1.7.1.min.js" type="text/javascript"></script>
-    <script src="./js/jquery.mousewheel-min.js" type="text/javascript"></script>
-    <script src="./js/jquery.terminal-min.js" type="text/javascript"></script>
+    <script src="./js/jquery-3.2.1.min.js" type="text/javascript"></script>
     <script src="./js/jquery.doedje.xml2json.js" type="text/javascript"></script>
+    <script src="./js/jquery.mousewheel-min.js" type="text/javascript"></script>
+    <script src="./js/jquery.soap.js" type="text/javascript"></script>
+    <script src="./js/jquery.terminal-min.js" type="text/javascript"></script>
     <script src="./js/main.js" type="text/javascript"></script>
 </head>
 
