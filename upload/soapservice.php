@@ -7,7 +7,7 @@ $_POST["vb4"] = "";
 error_reporting(E_ALL & ~E_NOTICE);
 
 // ##################### DEFINE IMPORTANT CONSTANTS #######################
-define('THIS_SCRIPT', 'vbulletinbot.php');
+define('THIS_SCRIPT', 'soapservice.php');
 define('CSRF_PROTECTION', false); 
 define('DIE_QUIETLY', 1);
 
@@ -306,19 +306,11 @@ function GetThread($who,$threadid)
     return $retval;     
 }
 
-function ListForums($who,$forumid)
+function ListForums($forumid)
 {
     global $db,$vbulletin,$server,$structtypes,$lastpostarray;
-    
-    $result = RegisterService($who);
-    if ($result['Code'] != 0)
-    {
-        $retval['Result'] = $result;
-        return $retval;
-    }
 
     $userid = $vbulletin->userinfo['userid'];
-    //$xml = new XMLexporter($vbulletin);
     
     // ### GET FORUMS & MODERATOR iCACHES ########################
     cache_ordered_forums(1,1);
@@ -428,11 +420,11 @@ function ListParentForums($who,$forumid)
     if ($tempinfo['parentid'] != -1)
     {
         $info = fetch_foruminfo($tempinfo['parentid']);
-        return ListForums($who,$info['forumid']);        
+        return ListForums($info['forumid']);        
     }
     else
     {
-        return ListForums($who,-1);        
+        return ListForums(-1);        
     }      
 }
 
@@ -977,8 +969,8 @@ $server->configureWSDL("VBotService","urn:VBotService");
 $server->wsdl->schemaTargetNamespace = $namespace;
 
 // include service types and functions           
-include (DIR . '/includes/types_vbot.php');
-include (DIR . '/includes/services_vbot.php');
+include (DIR . '/shell/shelltypes.php');
+include (DIR . '/shell/shellservices.php');
 
 // Get our posted data if the service is being consumed
 // otherwise leave this data blank.                
