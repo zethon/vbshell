@@ -23,6 +23,6 @@ $stylevar[htmldoctype]
 <script>
     System.bburl = '$vboptions[bburl]';
 </script>
-<div class="terminal-output"/>
+<div class="theTerminal"/>
 </body>
 </html>

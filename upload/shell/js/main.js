@@ -1,3 +1,5 @@
+var mainTerminal = {};
+
 var System = 
 {
     loggedIn: false,
@@ -11,6 +13,7 @@ var System =
     currentPost: "",
     currentPostID: 0,
 }
+
 var commandText = function(text)
 {
     return "[[g;#EEEEEE;]" + text + "]";
@@ -28,10 +31,6 @@ var errorText = function(text)
 
 var App = 
 {
-    loggedIn: false,
-    username: "",
-    userid: 0,
-
     welcome: function(ret)
     {
         if (typeof ret === 'undefined') ret = false;
@@ -82,57 +81,24 @@ var App =
 
     whoami: function()
     {
-        // this.echo();
-        // this.echo(commandText("UserID  : ") + System.userid);
-        // this.echo(commandText("Username: ") + System.username);
-        // this.echo();
-
         console.log("whoami() issued");
-        console.log(this);
-        console.log("....................");
 
-        $.soap({
+        $.soap(
+        {
             url: '/soapservice.php/',
             method: 'WhoAmI',
             data: { },
-            success: function (soapResponse,) 
-            {
-                console.log("NICE");
-                console.log(soapResponse);
-                // console.log("XML: " + soapResponse.toXML().toString());
-                console.log(this);
-            },
-            error: function (soapResponse) 
-            {
-                console.log("ERROR!");
-                console.log(soapResponse);
-            }
+        })
+        .done(function(data, textStatus, jqXHR) 
+        {
+            console.log(data);
+            mainTerminal.echo("Status: " + textStatus);
+        })
+        .fail(function(jqXHR, textStatus, errorThrown) 
+        {
+            console.log("textStatus: " + textStatus);
+            this.echo(":(");
         });        
-        
-        // $.soap({
-        //     url: '/soapservice.php',
-        //     method: 'WhoAmI',
-        
-        //     // data: {
-        //     //     name: 'Remy Blom',
-        //     //     msg: 'Hi!'
-        //     // },
-
-        //     success: function (soapResponse) 
-        //     {
-        //         console.log("YAY!!");
-        //         // do stuff with soapResponse
-        //         // if you want to have the response as JSON use soapResponse.toJSON();
-        //         // or soapResponse.toString() to get XML string
-        //         // or soapResponse.toXML() to get XML DOM
-        //     },
-        //     error: function (SOAPResponse) 
-        //     {
-        //         console.log("OH SNAP ERROR!!!");
-        //     }
-        // });
-
-
     },
 
     whereami : function()
@@ -158,21 +124,25 @@ jQuery(document).ready(function($)
     } 
     else 
     {
-        $('body').terminal(App, 
-        {
-            greetings: function(cb)
+        mainTerminal = $('body').terminal
+        (
+            App, 
             {
-                cb(App.welcome(true));
-            },
+                greetings: function(cb)
+                {
+                    cb(App.welcome(true));
+                },
 
-            onBlur: function() 
-            {
-                // prevent loosing focus
-                return false;
-            },
-            completion: true,
-            checkArity: false,
-            convertLinks: true
-        });
+                onBlur: function() 
+                {
+                    // prevent loosing focus
+                    return false;
+                },
+
+                completion: true,
+                checkArity: false,
+                convertLinks: true
+            }
+        );
     }
 });
