@@ -88,17 +88,28 @@ var App =
             url: '/soapservice.php/',
             method: 'WhoAmI',
             data: { },
-        })
-        .done(function(data, textStatus, jqXHR) 
-        {
-            console.log(data);
-            mainTerminal.echo("Status: " + textStatus);
-        })
-        .fail(function(jqXHR, textStatus, errorThrown) 
-        {
-            console.log("textStatus: " + textStatus);
-            this.echo(":(");
-        });        
+
+            success: function (soapResponse) 
+            {
+                var xmlResponse = soapResponse.toXML().documentElement;
+                console.log(xmlResponse);
+                var userIdArr = xmlResponse.getElementsByTagName("UserID");
+                var usernameArr = xmlResponse.getElementsByTagName("Username");
+                if (userIdArr.length > 0 && usernameArr.length > 0)
+                {
+                    console.log(userIdArr);
+                    console.log(usernameArr);
+                    var userid = userIdArr[0].textContent;
+                    var username = usernameArr[0].textContent;
+                    mainTerminal.echo("You are " + commandText(username) + "[" + userid + "]");
+                    mainTerminal.echo();
+                }
+            },
+            error: function (SOAPResponse) 
+            {
+                mainTerminal.echo(errorText("Error: ") + soapResponse.toXML());
+            }            
+        });
     },
 
     whereami : function()
