@@ -66,16 +66,53 @@ var App =
 
     logout: function()
     {
+        // console.log("command: " + command);
+        // console.log("term   : " + term);
         console.log("logout command issued");
-        this.echo(errorText("Not yet implemented"));
+        // var test = $.post('/index.php', {command: 'hi!'}).then(
+        //     function(response)
+        //     {
+        //         this.echo("THIS IS A RESPONSE!");
+        //     });
+        var test = $.post('/soapservice.php');
+
+        this.echo("RESPONSE: " + test);
+        console.log(test);
     },
 
     whoami: function()
     {
-        this.echo();
-        this.echo(commandText("UserID  : ") + System.userid);
-        this.echo(commandText("Username: ") + System.username);
-        this.echo();
+        // this.echo();
+        // this.echo(commandText("UserID  : ") + System.userid);
+        // this.echo(commandText("Username: ") + System.username);
+        // this.echo();
+
+        console.log("whoami() issued");
+        
+        $.soap({
+            url: '/soapservice.php',
+            method: 'WhoAmI',
+        
+            // data: {
+            //     name: 'Remy Blom',
+            //     msg: 'Hi!'
+            // },
+
+            success: function (soapResponse) 
+            {
+                console.log("YAY!!");
+                // do stuff with soapResponse
+                // if you want to have the response as JSON use soapResponse.toJSON();
+                // or soapResponse.toString() to get XML string
+                // or soapResponse.toXML() to get XML DOM
+            },
+            error: function (SOAPResponse) 
+            {
+                console.log("OH SNAP ERROR!!!");
+            }
+        });
+
+
     },
 
     whereami : function()
@@ -90,7 +127,7 @@ var App =
     menu: function()
     {
         this.exec('help');
-    }
+    },
 }
 
 jQuery(document).ready(function($) 
