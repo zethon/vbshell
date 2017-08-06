@@ -88,29 +88,49 @@ var App =
         // this.echo();
 
         console.log("whoami() issued");
-        
-        $.soap({
-            url: '/soapservice.php',
-            method: 'WhoAmI',
-        
-            // data: {
-            //     name: 'Remy Blom',
-            //     msg: 'Hi!'
-            // },
+        console.log(this);
+        console.log("....................");
 
-            success: function (soapResponse) 
+        $.soap({
+            url: '/soapservice.php/',
+            method: 'WhoAmI',
+            data: { },
+            success: function (soapResponse,) 
             {
-                console.log("YAY!!");
-                // do stuff with soapResponse
-                // if you want to have the response as JSON use soapResponse.toJSON();
-                // or soapResponse.toString() to get XML string
-                // or soapResponse.toXML() to get XML DOM
+                console.log("NICE");
+                console.log(soapResponse);
+                // console.log("XML: " + soapResponse.toXML().toString());
+                console.log(this);
             },
-            error: function (SOAPResponse) 
+            error: function (soapResponse) 
             {
-                console.log("OH SNAP ERROR!!!");
+                console.log("ERROR!");
+                console.log(soapResponse);
             }
-        });
+        });        
+        
+        // $.soap({
+        //     url: '/soapservice.php',
+        //     method: 'WhoAmI',
+        
+        //     // data: {
+        //     //     name: 'Remy Blom',
+        //     //     msg: 'Hi!'
+        //     // },
+
+        //     success: function (soapResponse) 
+        //     {
+        //         console.log("YAY!!");
+        //         // do stuff with soapResponse
+        //         // if you want to have the response as JSON use soapResponse.toJSON();
+        //         // or soapResponse.toString() to get XML string
+        //         // or soapResponse.toXML() to get XML DOM
+        //     },
+        //     error: function (SOAPResponse) 
+        //     {
+        //         console.log("OH SNAP ERROR!!!");
+        //     }
+        // });
 
 
     },
