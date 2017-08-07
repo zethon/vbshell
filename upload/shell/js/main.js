@@ -17,7 +17,8 @@ var System =
 
     lastList: ListEnum.none,
     forumList:[],
-    threadList: []
+    threadList: [],
+    postList: []
 }
 
 var commandText = function(text)
@@ -206,15 +207,41 @@ var App =
             data: { ThreadID: System.currentThread.id, PageNumber: pagenum, PerPage: perpage },
             success: function (response) 
             {
-                console.log(response.toXML());
-                // var currentEl = response.toXML().documentElement.getElementsByTagName('CurrentForum');
-                // if (currentEl.length > 0)
-                // {
-                //     System.currentThread = {};
-                //     System.currentForum.title = $(currentEl).find("Title").text();
-                //     System.currentForum.id = $(currentEl).find("ForumID").text();
-                //     mainTerminal.set_prompt("[[;#00ffff;]{0}]> ".format(System.currentForum.title));
-                // }
+                var items = response.toXML().documentElement.getElementsByTagName('item');
+                if (items.length > 0)
+                {
+                    for (var i=0; i < items.length; i++)
+                    {
+                        var obj = 
+                        {
+                            postid: parseInt($(items[i]).find("PostID").text()),
+                            username: $(items[i]).find("Username").text(),
+                            pagetext: $(items[i]).find("PageText").text(),
+                            title: $(items[i]).find("Title").text(),
+                            dateline: parseInt($(items[i]).find("DateLine").text()),
+                            datelinetext: $(items[i]).find("DateLineText").text(),
+                            ipaddress: $(items[i]).find("IpAddress").text(),
+                            isnew: ($(items[i]).find("IsNew").text() == "true"),
+                        };
+
+                        System.postList.push(obj);
+
+                        var trimmedString = obj.pagetext.substr(0, 60);
+                        trimmedString = trimmedString.substr(0, Math.min(trimmedString.length, trimmedString.lastIndexOf(" ")))
+                        trimmedString = "\"" + trimmedString + "\"";
+
+                        if (obj.isnew)
+                        {
+                            mainTerminal.echo("[ [[b;#2c9995;]"+ (i+1) +"] ] [[b;#f4f4f4;]"+trimmedString+"], " + obj.datelinetext + " by " + obj.username);
+                        }
+                        else
+                        {
+                            mainTerminal.echo("[ [[b;#2c9995;]"+ (i+1) +"] ] "+trimmedString+", " + obj.datelinetext + " by " + obj.username);
+                        }
+                        
+
+                    }                        
+                }
             },
             error: function (SOAPResponse) 
             {
@@ -230,15 +257,12 @@ var App =
             var idx = parseInt(command);
             if (!isNaN(idx) && (idx-1) <= System.threadList.length)
             {
-                var t = System.threadList[idx];
+                var t = System.threadList[idx-1];
 
                 System.currentThread = {};
                 System.currentThread.id = t.threadid;
                 System.currentThread.title = t.title;
-
-                // console.log(t);
-
-
+                this.exec('lp');
             }
             else
             {
