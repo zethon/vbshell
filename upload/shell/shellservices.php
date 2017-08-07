@@ -1,6 +1,7 @@
 <?
 
-$server->register(
+$server->register
+(
     // method name:
     'WhoAmI', 		 
     // parameter list:
@@ -19,9 +20,10 @@ $server->register(
     'Returns the user information of the associated user credentials'
 ); 
                 
-$server->register(
+$server->register
+(
     'ListForums',
-    array('UserCredentials'=>'tns:UserCredentials','ForumID'=>'xsd:int'),
+    array('ForumID'=>'xsd:int'),
     array('return'=>'tns:ForumListResult'),
     $namespace,
     false,

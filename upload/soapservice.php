@@ -941,17 +941,8 @@ function UnSubscribeThread($who,$threadid)
 function WhoAmI()
 {
 	global $db,$vbulletin,$server,$structtypes;
-	
-    // $result = RegisterService($who);
-   
-    // if ($result['Code'] != 0)
-    // {
-    //     return $result;
-    // }
-	
-	// $retuser = ConsumeArray($vbulletin->userinfo,$structtypes['RemoteUser']);
 
-	$result['Code'] = 0;
+    $result['Code'] = 0;
 	$result['Text'] = ''; 
 	$result['RemoteUser'] = ConsumeArray($vbulletin->userinfo,$structtypes['RemoteUser']); 
 	return $result;

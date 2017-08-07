@@ -7,7 +7,7 @@ var System =
     username: "",
     bburl: "",
     currentForum: "",
-    currentForumID: 0,
+    currentForumID: -1,
     currentThread: "",
     currentThreadID: 0,
     currentPost: "",
@@ -92,7 +92,6 @@ var App =
             success: function (soapResponse) 
             {
                 var xmlResponse = soapResponse.toXML().documentElement;
-                console.log(xmlResponse);
                 var userIdArr = xmlResponse.getElementsByTagName("UserID");
                 var usernameArr = xmlResponse.getElementsByTagName("Username");
                 if (userIdArr.length > 0 && usernameArr.length > 0)
@@ -110,6 +109,82 @@ var App =
                 mainTerminal.echo(errorText("Error: ") + soapResponse.toXML());
             }            
         });
+    },
+
+    lf : function(arrayP)
+    {
+        if (arguments.length > 0)
+        {
+            console.log(arguments);
+            for(var i=0; i< arguments.length; i++) 
+            {
+                console.log("'lf' options: " + arguments[i]);
+            }     
+        }
+        else
+        {
+            console.log("lf() issues");
+            $.soap(
+            {
+                url: '/soapservice.php/',
+                method: 'ListForums',
+                // data: { ForumId: System.currentForumID },
+                data: { ForumId: 13 },
+                success: function (response) 
+                {
+                    // var json = $.xml2json(response.toJSON());
+                    // console.log(json);
+                //     json.find('item').each(function()
+                // {
+                //     var titleText = $(this).find('Title').text();
+                //     console.log("titleText: " + titleText);
+                // });
+
+                    // console.log(soapResponse.toJSON());
+                    // var obj = soapResponse.toJSON();
+
+                //     soapResponse.toJSON().find('item').each(function()
+                // {
+                //     var titleText = $(this).find('Title').text();
+                //     console.log("titleText: " + titleText);
+                // });
+                    // // console.log(soapResponse.toJSON());
+                    // $.each(, function()
+                    // {
+                    //     var titleText = $(this).find('Title').text();
+                    //     console.log("titleText: " + titleText);
+                    // });
+                
+                
+                // ).find('item').each(function()
+                // {
+                //     var titleText = $(this).find('Title').text();
+                //     console.log("titleText: " + titleText);
+                // });
+                    // var xmlResponse = soapResponse.toXML().documentElement;
+                    // var forumEl = xmlResponse.getElementsByTagName("ForumList");
+                    // console.log(forumEl);
+                    // forumEl[0].childNodes.forEach(function(item, index)
+                    // {
+                    //     item.
+                    //     console.log(index);
+                    //     console.log(item);
+                    // });
+                    // if (forumEl.length > 0)
+                    // {
+                    //     var list = forumEl.getElementsByTagName("item");
+                    //     for (var i=0; i < list.length; i++)
+                    //     {
+                    //         console.log(list[i]);
+                    //     }
+                    // }
+                },
+                error: function (SOAPResponse) 
+                {
+                    mainTerminal.echo(errorText("Error: ") + soapResponse.toXML());
+                }
+            });
+        }
     },
 
     whereami : function()
