@@ -519,17 +519,10 @@ function ListPosts($who,$threadid,$pagenumber,$perpage)
     return $retval;
 }
 
-function ListThreads($who,$forumid,$pagenumber,$perpage)
+function ListThreads($forumid,$pagenumber,$perpage)
 {
     global $db,$vbulletin,$server,$structtypes,$lastpostarray;
     
-    $result = RegisterService($who);
-    if ($result['Code'] != 0)
-    {
-        $retval['Result'] = $result;
-        return $retval;
-    }
-
     // get the total threads count    
     $threadcount = $db->query_first("SELECT threadcount FROM " . TABLE_PREFIX . "forum WHERE (forumid = $forumid);");
     

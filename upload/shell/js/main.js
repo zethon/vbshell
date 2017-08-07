@@ -12,13 +12,11 @@ var System =
     bburl: "",
     
     currentForum: {title: "", id: -1},
+    currentThread: {},
 
-    currentThread: "",
-    currentThreadID: 0,
-    currentPost: "",
-    currentPostID: 0,
     lastList: ListEnum.none,
     forumList:[],
+    threadList: []
 }
 
 var commandText = function(text)
@@ -152,59 +150,110 @@ var App =
 
     lf : function()
     {
-        if (arguments.length > 0)
+        $.soap(
         {
-            console.log(arguments);
-            for(var i=0; i< arguments.length; i++) 
+            url: '/soapservice.php/',
+            method: 'ListForums',
+            data: { ForumId: System.currentForum.id },
+            success: function (response) 
             {
-                console.log("'lf' options: " + arguments[i]);
-            }     
-        }
-        else
+                var items = response.toXML().documentElement.getElementsByTagName('item');
+                if (items.length > 0)
+                {
+                    System.lastList = ListEnum.forum;
+                    System.forumList = [];
+
+                    for (var i=0; i < items.length; i++)
+                    {
+                        var title = $(items[i]).find("Title").text();
+                        var forumid = $(items[i]).find("ForumID").text();
+                        var hasnew = ($(items[i]).find("IsNew").text() == "true");
+                        var iscurrent = ($(items[i]).find("IsCurrent").text() == "true");
+
+                        var obj = {title: title, forumid: forumid, hasnew: hasnew, iscurrent: iscurrent};
+                        System.forumList.push(obj);
+                        
+                        if (hasnew)
+                        {
+                            mainTerminal.echo("[[[b;#f4f4f4;]"+ (i+1) +"]] [[b;#f4f4f4;]"+title+"]");
+                        }
+                        else
+                        {
+                            mainTerminal.echo("[[[b;#f4f4f4;]"+ (i+1) +"]] "+title+"");
+                        }
+                    }
+
+                    mainTerminal.echo();
+                    mainTerminal.echo("Use 'cf [idx]' to navigate to that forum");
+                    mainTerminal.echo("Use 'cf ..' to navigate to the parent forum");
+                }
+            },
+            error: function (SOAPResponse) 
+            {
+                mainTerminal.echo("Error: " + soapResponse.toXML());
+            }
+        });
+    },
+
+    lt : function()
+    {
+        if (System.currentForum.id != -1) 
         {
+            var pagenum = (arguments[0] != undefined) ? arguments[0] : 1;
+            var perpage = (arguments[1] != undefined) ? arguments[1] : 10;
+
             $.soap(
             {
                 url: '/soapservice.php/',
-                method: 'ListForums',
-                data: { ForumId: System.currentForum.id },
+                method: 'ListThreads',
+                data: { ForumId: System.currentForum.id, PageNumber: pagenum, PerPage: perpage },
                 success: function (response) 
                 {
                     var items = response.toXML().documentElement.getElementsByTagName('item');
                     if (items.length > 0)
                     {
-                        System.lastList = ListEnum.forum;
-                        System.forumList = [];
+                        System.threadList = [];
+                        System.lastList = ListEnum.thread;
 
                         for (var i=0; i < items.length; i++)
                         {
-                            var title = $(items[i]).find("Title").text();
-                            var forumid = $(items[i]).find("ForumID").text();
-                            var hasnew = ($(items[i]).find("IsNew").text() == "true");
-                            var iscurrent = ($(items[i]).find("IsCurrent").text() == "true");
+                            var obj = 
+                            {
+                                threadid: $(items[i]).find("ThreadID").text(),
+                                title: $(items[i]).find("ThreadTitle").text(),
+                                lastpost: $(items[i]).find("LastPoster").text(),
+                                lastposter: $(items[i]).find("LastPoster").text(),
+                                replycount: parseInt($(items[i]).find("ReplyCount").text()),
+                                hasnew: ($(items[i]).find("IsNew").text() == "true"),
+                                datelinetext: $(items[i]).find("DateLineText").text()
+                            };
 
-                            var newmarker = hasnew ? "[[b;#D050D0;]*]" : "";
-                            mainTerminal.echo("[[[b;#f4f4f4;]"+ (i+1) +"]] "+newmarker+"[[b;#00F400;]"+title+"]");
-
-                            var obj = {title: title, forumid: forumid, hasnew: hasnew, iscurrent: iscurrent};
-                            System.forumList.push(obj);
+                            System.threadList.push(obj);
+                            if (obj.hasnew)
+                            {
+                                mainTerminal.echo("[[[b;#f4f4f4;]"+ (i+1) +"]] [[b;#f4f4f4;]"+obj.title+"]");
+                            }
+                            else
+                            {
+                                mainTerminal.echo("[[[b;#f4f4f4;]"+ (i+1) +"]] "+obj.title+"]");
+                            }
                         }
-
-                        mainTerminal.echo();
-                        mainTerminal.echo("Use 'cf [idx]' to navigate to that forum");
-                        mainTerminal.echo("Use 'cf ..' to navigate to the parent forum");
                     }
                 },
-                error: function (SOAPResponse) 
+                error: function (response) 
                 {
-                    mainTerminal.echo("Error: " + soapResponse.toXML());
+                    mainTerminal.echo("Error: " + response.toXML());
                 }
             });
+        }
+        else 
+        {
+            mainTerminal.error("Please select a forum first. Use 'lf' to list forums.");
         }
     },
 
     whereami : function()
     {
-        this.echo();
         this.echo(("Current Forum  : ") + commandText(System.currentForum.title) + "[" + System.currentForum.id + "]");
         // this.echo(commandText("Current Thread : ") + System.currentThread);
         // this.echo(commandText("Current Post   : ") + System.currentPost);
