@@ -10,6 +10,15 @@ $stylevar[htmldoctype]
     <script src="./js/jquery.soap.js" type="text/javascript"></script>
     <script src="./js/jquery.terminal-min.js" type="text/javascript"></script>
     <script src="./js/main.js" type="text/javascript"></script>
+
+<style type="text/css">
+.terminal, .cmd, .terminal .terminal-output div div, .cmd .prompt {
+    font-size: 16px;
+    line-height: 18px;
+    font-family: Monaco, 'Source Code Pro', FreeMono, monospace;
+}
+</style>
+
 </head>
 
 <body class="terminal">

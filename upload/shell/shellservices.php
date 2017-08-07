@@ -34,7 +34,7 @@ $server->register
           
 $server->register(
     'ListParentForums',
-    array('UserCredentials'=>'tns:UserCredentials','ForumID'=>'xsd:int'),
+    array('ForumID'=>'xsd:int'),
     array('return'=>'tns:ForumListResult'),
     $namespace,
     false,

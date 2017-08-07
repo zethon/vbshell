@@ -1,4 +1,8 @@
+// the terminal object we'll use for output
 var mainTerminal = {};
+
+// the types of lists we can ask for
+var ListEnum = { "none": 0, "forum":1, "thread":2, "post":3 };
 
 var System = 
 {
@@ -6,12 +10,15 @@ var System =
     userid: 0,
     username: "",
     bburl: "",
-    currentForum: "",
-    currentForumID: -1,
+    
+    currentForum: {title: "", id: -1},
+
     currentThread: "",
     currentThreadID: 0,
     currentPost: "",
     currentPostID: 0,
+    lastList: ListEnum.none,
+    forumList:[],
 }
 
 var commandText = function(text)
@@ -60,24 +67,27 @@ var App =
             this.echo("|  " + commandText("whoami") + "             - Print current user name");
             this.echo("|  " + commandText("whereami") + "           - Print the current forum, thread and post");
             this.echo();
+            this.echo("|  " + commandText("lf") + "                 - List the subforums of the current forum");
+            this.echo("|  " + commandText("cf") + "                 - Navigate to a forum by index (example 'cf 1')");
+            this.echo();
         }
     },
 
-    logout: function()
-    {
-        // console.log("command: " + command);
-        // console.log("term   : " + term);
-        console.log("logout command issued");
-        // var test = $.post('/index.php', {command: 'hi!'}).then(
-        //     function(response)
-        //     {
-        //         this.echo("THIS IS A RESPONSE!");
-        //     });
-        var test = $.post('/soapservice.php');
+    // logout: function()
+    // {
+    //     // console.log("command: " + command);
+    //     // console.log("term   : " + term);
+    //     console.log("logout command issued");
+    //     // var test = $.post('/index.php', {command: 'hi!'}).then(
+    //     //     function(response)
+    //     //     {
+    //     //         this.echo("THIS IS A RESPONSE!");
+    //     //     });
+    //     var test = $.post('/soapservice.php');
 
-        this.echo("RESPONSE: " + test);
-        console.log(test);
-    },
+    //     this.echo("RESPONSE: " + test);
+    //     console.log(test);
+    // },
 
     whoami: function()
     {
@@ -111,7 +121,54 @@ var App =
         });
     },
 
-    lf : function(arrayP)
+    cf : function(command)
+    {
+        if (command != undefined)
+        {
+            var idx = parseInt(command);
+            if (command == "..")
+            {
+                $.soap(
+                {
+                    url: '/soapservice.php/',
+                    method: 'ListParentForums',
+                    data: { ForumId: System.currentForum.id },
+                    success: function (response) 
+                    {
+                        console.log(response.toXML());
+                        var currentEl = response.toXML().documentElement.getElementsByTagName('CurrentForum');
+                        if (currentEl.length > 0)
+                        {
+                            System.currentForum.title = $(currentEl).find("Title").text();
+                            System.currentForum.id = $(currentEl).find("ForumID").text();
+                            mainTerminal.echo("Current forum: " + commandText(System.currentForum.title));
+                            mainTerminal.echo();
+                        }
+                    },
+                    error: function (SOAPResponse) 
+                    {
+                        mainTerminal.echo(errorText("Error: ") + SOAPResponse.toXML());
+                    }
+                });
+            }
+            else if (!isNaN(idx) && (idx-1) <= System.forumList.length)
+            {
+                System.currentForum.id = System.forumList[idx-1].forumid;
+                System.currentForum.title = System.forumList[idx-1].title;
+                mainTerminal.echo("Current forum: " + commandText(System.currentForum.title));
+            }
+            else
+            {
+                mainTerminal.echo(errorText("Invalid index"));
+            }
+        }
+        else
+        {
+            mainTerminal.echo(errorText("Invalid index"));
+        }
+    },
+
+    lf : function()
     {
         if (arguments.length > 0)
         {
@@ -123,61 +180,37 @@ var App =
         }
         else
         {
-            console.log("lf() issues");
             $.soap(
             {
                 url: '/soapservice.php/',
                 method: 'ListForums',
-                // data: { ForumId: System.currentForumID },
-                data: { ForumId: 13 },
+                data: { ForumId: System.currentForum.id },
                 success: function (response) 
                 {
-                    // var json = $.xml2json(response.toJSON());
-                    // console.log(json);
-                //     json.find('item').each(function()
-                // {
-                //     var titleText = $(this).find('Title').text();
-                //     console.log("titleText: " + titleText);
-                // });
+                    var items = response.toXML().documentElement.getElementsByTagName('item');
+                    if (items.length > 0)
+                    {
+                        System.lastList = ListEnum.forum;
+                        System.forumList = [];
 
-                    // console.log(soapResponse.toJSON());
-                    // var obj = soapResponse.toJSON();
+                        for (var i=0; i < items.length; i++)
+                        {
+                            var title = $(items[i]).find("Title").text();
+                            var forumid = $(items[i]).find("ForumID").text();
+                            var hasnew = ($(items[i]).find("IsNew").text() == "true");
+                            var iscurrent = ($(items[i]).find("IsCurrent").text() == "true");
 
-                //     soapResponse.toJSON().find('item').each(function()
-                // {
-                //     var titleText = $(this).find('Title').text();
-                //     console.log("titleText: " + titleText);
-                // });
-                    // // console.log(soapResponse.toJSON());
-                    // $.each(, function()
-                    // {
-                    //     var titleText = $(this).find('Title').text();
-                    //     console.log("titleText: " + titleText);
-                    // });
-                
-                
-                // ).find('item').each(function()
-                // {
-                //     var titleText = $(this).find('Title').text();
-                //     console.log("titleText: " + titleText);
-                // });
-                    // var xmlResponse = soapResponse.toXML().documentElement;
-                    // var forumEl = xmlResponse.getElementsByTagName("ForumList");
-                    // console.log(forumEl);
-                    // forumEl[0].childNodes.forEach(function(item, index)
-                    // {
-                    //     item.
-                    //     console.log(index);
-                    //     console.log(item);
-                    // });
-                    // if (forumEl.length > 0)
-                    // {
-                    //     var list = forumEl.getElementsByTagName("item");
-                    //     for (var i=0; i < list.length; i++)
-                    //     {
-                    //         console.log(list[i]);
-                    //     }
-                    // }
+                            var newmarker = hasnew ? "[[b;#D050D0;]*]" : "";
+                            mainTerminal.echo("[[[b;#f4f4f4;]"+ (i+1) +"]] "+newmarker+"[[b;#00F400;]"+title+"]");
+
+                            var obj = {title: title, forumid: forumid, hasnew: hasnew, iscurrent: iscurrent};
+                            System.forumList.push(obj);
+                        }
+
+                        mainTerminal.echo();
+                        mainTerminal.echo("Use 'cf [idx]' to navigate to that forum");
+                        mainTerminal.echo("Use 'cf ..' to navigate to the parent forum");
+                    }
                 },
                 error: function (SOAPResponse) 
                 {
@@ -190,9 +223,9 @@ var App =
     whereami : function()
     {
         this.echo();
-        this.echo(commandText("Current Forum  : ") + System.currentForum);
-        this.echo(commandText("Current Thread : ") + System.currentThread);
-        this.echo(commandText("Current Post   : ") + System.currentPost);
+        this.echo(("Current Forum  : ") + commandText(System.currentForum.title) + "[" + System.currentForum.id + "]");
+        // this.echo(commandText("Current Thread : ") + System.currentThread);
+        // this.echo(commandText("Current Post   : ") + System.currentPost);
         this.echo(); 
     },
 

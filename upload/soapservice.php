@@ -406,7 +406,7 @@ function ListForums($forumid)
     return $retval;
 }
 
-function ListParentForums($who,$forumid)
+function ListParentForums($forumid)
 {
     global $db,$vbulletin,$server,$structtypes,$lastpostarray;
     
