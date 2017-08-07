@@ -428,17 +428,10 @@ function ListParentForums($forumid)
     }      
 }
 
-function ListPosts($who,$threadid,$pagenumber,$perpage)
+function ListPosts($threadid,$pagenumber,$perpage)
 {
     global $db,$vbulletin,$server,$structtypes,$lastpostarray;
-    
-    $result = RegisterService($who);
-    if ($result['Code'] != 0)
-    {
-        $retval['Result'] = $result;
-        return $retval;
-    }    
-    
+
     // *********************************************************************************
     // get thread info
     $threadinfo = $thread = fetch_threadinfo($threadid);

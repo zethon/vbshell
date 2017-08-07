@@ -56,7 +56,7 @@ $server->register(
 
 $server->register(
     'ListPosts',
-    array('UserCredentials'=>'tns:UserCredentials','ThreadID'=>'xsd:int','PageNumber'=>'xsd:int','PerPage'=>'xsd:int'),
+    array('ThreadID'=>'xsd:int','PageNumber'=>'xsd:int','PerPage'=>'xsd:int'),
     array('return'=>'tns:PostListResult'),
     $namespace,
     false,

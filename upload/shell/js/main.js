@@ -11,8 +11,9 @@ var System =
     username: "",
     bburl: "",
     
-    currentForum: {title: "", id: -1},
-    currentThread: {},
+    currentForum: {id: -1},
+    currentThread: {id: -1},
+    currentPost: {id: -1},
 
     lastList: ListEnum.none,
     forumList:[],
@@ -54,15 +55,15 @@ var App =
     {
         if (System.loggedIn)
         {    
-            this.echo();
+            this.echo("\n");
             this.echo("|  " + commandText("logout") + "             - Logout");
-            this.echo();
+            this.echo("\n");
             this.echo("|  " + commandText("whoami") + "             - Print current user name");
             this.echo("|  " + commandText("whereami") + "           - Print the current forum, thread and post");
-            this.echo();
+            this.echo("\n");
             this.echo("|  " + commandText("lf") + "                 - List the subforums of the current forum");
             this.echo("|  " + commandText("cf") + "                 - Navigate to a forum by index (example 'cf 1')");
-            this.echo();
+            this.echo("\n");
         }
     },
 
@@ -88,7 +89,7 @@ var App =
                     var userid = userIdArr[0].textContent;
                     var username = usernameArr[0].textContent;
                     mainTerminal.echo("You are " + commandText(username) + "[" + userid + "]");
-                    mainTerminal.echo();
+                    mainTerminal.echo("\n");
                 }
             },
             error: function (SOAPResponse) 
@@ -116,11 +117,10 @@ var App =
                         var currentEl = response.toXML().documentElement.getElementsByTagName('CurrentForum');
                         if (currentEl.length > 0)
                         {
+                            System.currentThread = {};
                             System.currentForum.title = $(currentEl).find("Title").text();
                             System.currentForum.id = $(currentEl).find("ForumID").text();
-                            mainTerminal.echo("Current forum: " + commandText(System.currentForum.title));
-                            mainTerminal.echo();
-                            mainTerminal.set_prompt("[[;#00ffff;]{0}]> ".format(System.currentForum.title));
+                            mainTerminal.exec('lf', true);
                         }
                     },
                     error: function (SOAPResponse) 
@@ -131,11 +131,10 @@ var App =
             }
             else if (!isNaN(idx) && (idx-1) <= System.forumList.length)
             {
+                System.currentThread = {};
                 System.currentForum.id = System.forumList[idx-1].forumid;
                 System.currentForum.title = System.forumList[idx-1].title;
-                mainTerminal.echo("Current forum: " + commandText(System.currentForum.title));
-                mainTerminal.echo();
-                mainTerminal.set_prompt("[[;#00ffff;]{0}]> ".format(System.currentForum.title));
+                this.exec('lf', true);
             }
             else
             {
@@ -148,7 +147,7 @@ var App =
         }
     },
 
-    lf : function()
+    lf: function()
     {
         $.soap(
         {
@@ -175,17 +174,17 @@ var App =
                         
                         if (hasnew)
                         {
-                            mainTerminal.echo("[[[b;#f4f4f4;]"+ (i+1) +"]] [[b;#f4f4f4;]"+title+"]");
+                            mainTerminal.echo("[ " + "[[b;#2c9995;]"+ (i+1) +"] ] [[b;#f4f4f4;]"+title+"]");
                         }
                         else
                         {
-                            mainTerminal.echo("[[[b;#f4f4f4;]"+ (i+1) +"]] "+title+"");
+                            mainTerminal.echo("[ " + "[[b;#2c9995;]"+ (i+1) +"] ] "+title+"");
                         }
                     }
 
-                    mainTerminal.echo();
-                    mainTerminal.echo("Use 'cf [idx]' to navigate to that forum");
-                    mainTerminal.echo("Use 'cf ..' to navigate to the parent forum");
+                    // mainTerminal.echo("\n");
+                    // mainTerminal.echo("Use 'cf [idx]' to navigate to that forum");
+                    // mainTerminal.echo("Use 'cf ..' to navigate to the parent forum");
                 }
             },
             error: function (SOAPResponse) 
@@ -193,6 +192,59 @@ var App =
                 mainTerminal.echo("Error: " + soapResponse.toXML());
             }
         });
+    },
+
+    lp: function()
+    {
+        var pagenum = (arguments[0] != undefined) ? arguments[0] : 1;
+        var perpage = (arguments[1] != undefined) ? arguments[1] : 10;
+
+        $.soap(
+        {
+            url: '/soapservice.php/',
+            method: 'ListPosts',
+            data: { ThreadID: System.currentThread.id, PageNumber: pagenum, PerPage: perpage },
+            success: function (response) 
+            {
+                console.log(response.toXML());
+                // var currentEl = response.toXML().documentElement.getElementsByTagName('CurrentForum');
+                // if (currentEl.length > 0)
+                // {
+                //     System.currentThread = {};
+                //     System.currentForum.title = $(currentEl).find("Title").text();
+                //     System.currentForum.id = $(currentEl).find("ForumID").text();
+                //     mainTerminal.set_prompt("[[;#00ffff;]{0}]> ".format(System.currentForum.title));
+                // }
+            },
+            error: function (SOAPResponse) 
+            {
+                mainTerminal.error("Error: " + SOAPResponse.toXML());
+            }
+        });
+    },
+
+    ct : function(command)
+    {
+        if (command != undefined)
+        {
+            var idx = parseInt(command);
+            if (!isNaN(idx) && (idx-1) <= System.threadList.length)
+            {
+                var t = System.threadList[idx];
+
+                System.currentThread = {};
+                System.currentThread.id = t.threadid;
+                System.currentThread.title = t.title;
+
+                // console.log(t);
+
+
+            }
+            else
+            {
+                mainTerminal.error("Invalid index");
+            }
+        }
     },
 
     lt : function()
@@ -231,11 +283,11 @@ var App =
                             System.threadList.push(obj);
                             if (obj.hasnew)
                             {
-                                mainTerminal.echo("[[[b;#f4f4f4;]"+ (i+1) +"]] [[b;#f4f4f4;]"+obj.title+"]");
+                                mainTerminal.echo("[ [[b;#2c9995;]"+ (i+1) +"] ] [[b;#f4f4f4;]"+obj.title+"], " + obj.replycount + " replies, " + obj.datelinetext + " by " + obj.lastposter);
                             }
                             else
                             {
-                                mainTerminal.echo("[[[b;#f4f4f4;]"+ (i+1) +"]] "+obj.title+"]");
+                                mainTerminal.echo("[ [[b;#2c9995;]"+ (i+1) +"] ] "+obj.title+", " + obj.replycount + " replies, " + obj.datelinetext + " by " + obj.lastposter);
                             }
                         }
                     }
@@ -254,16 +306,103 @@ var App =
 
     whereami : function()
     {
-        this.echo(("Current Forum  : ") + commandText(System.currentForum.title) + "[" + System.currentForum.id + "]");
-        // this.echo(commandText("Current Thread : ") + System.currentThread);
-        // this.echo(commandText("Current Post   : ") + System.currentPost);
-        this.echo(); 
+        this.echo("Current Board  : " + commandText(System.bburl));
+        this.echo("Current Forum  : " + commandText(System.currentForum.title) + " [" + System.currentForum.id + "]");
+
+        if (System.currentThread != undefined && System.currentThread.id != -1)
+        {
+            this.echo("Current Thread : " + commandText(System.currentThread.title) + " [" + System.currentThread.id + "]");
+        }
+
+        if (System.currentPost != undefined && System.currentPost.id != -1)
+        {
+            this.echo("Current Post : " + commandText(System.currentPost.title) + " [" + System.currentPost.id + "]");
+        }
+        
+        this.echo("\n"); 
     },
 
     menu: function()
     {
         this.exec('help');
     },
+}
+
+var Options = 
+{
+    greetings: function(cb)
+    {
+        cb(App.welcome(true));
+    },
+
+    onBlur: function() 
+    {
+        // prevent loosing focus
+        return false;
+    },
+
+    completion: true,
+    checkArity: false,
+    convertLinks: true,
+    onInit: function(terminal) 
+    {
+        terminal.set_prompt("[ [[b;#4ef021;]" + System.bbtitle + "] ]$ ")
+    },
+
+    onAfterCommand: function(terminal)
+    {
+        if (System.currentForum.id == -1)
+        {
+            terminal.set_prompt("[ [[b;#4ef021;]" + System.bbtitle + "] ]$ ")
+        }
+        else
+        {
+            mainTerminal.set_prompt("[ [[b;#4ef021;]" + System.bbtitle + "]:[[;#00ffff;]{0}] ]$ ".format(System.currentForum.title));
+        }
+    },
+
+    onBeforeCommand: function(terminal, command)
+    {
+        var passAlong = true;
+        var idx = parseInt(command);
+        if (!isNaN(idx))
+        {
+            switch (System.lastList)
+            {
+                case ListEnum.forum:
+                {
+                    passAlong = false;
+                    terminal.exec('cf '+idx, false);
+                    break;
+                }
+
+                case ListEnum.thread:
+                {
+                    passAlong = false;
+                    terminal.exec('ct '+idx, false);
+                    break;
+                }
+
+                default: break;                
+            }
+            return false;
+        }
+        else if (command == "..")
+        {
+            passAlong = false;
+            terminal.exec('cf ..', false);
+        }
+        else if (command == "n")
+        {
+            console.log("NEXT");
+        }
+        else if (command == "p")
+        {
+            console.log("PREV");
+        }
+
+        return passAlong;
+    }
 }
 
 jQuery(document).ready(function($) 
@@ -290,25 +429,6 @@ jQuery(document).ready(function($)
     } 
     else 
     {
-        mainTerminal = $('body').terminal
-        (
-            App, 
-            {
-                greetings: function(cb)
-                {
-                    cb(App.welcome(true));
-                },
-
-                onBlur: function() 
-                {
-                    // prevent loosing focus
-                    return false;
-                },
-
-                completion: true,
-                checkArity: false,
-                convertLinks: true
-            }
-        );
+        mainTerminal = $('body').terminal(App, Options);
     }
 });
