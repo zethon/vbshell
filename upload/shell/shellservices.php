@@ -67,7 +67,7 @@ $server->register(
 
 $server->register(
     'GetPostByIndex',
-    array('UserCredentials'=>'tns:UserCredentials','ThreadID'=>'xsd:int','Index'=>'xsd:int','ShowBBCode'=>'xsd:boolean'),
+    array('ThreadID'=>'xsd:int','Index'=>'xsd:int','ShowBBCode'=>'xsd:boolean'),
     array('return'=>'tns:GetPostResult'),
     $namespace,
     false,

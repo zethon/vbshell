@@ -120,7 +120,7 @@ function RegisterService($who)
 	// return $result;
 }
 
-function GetPostByIndex($who,$threadid,$index,$showbbcode = false)
+function GetPostByIndex($threadid,$index,$showbbcode = false)
 {
     global $db,$vbulletin,$server,$structtypes,$lastpostarray;
     

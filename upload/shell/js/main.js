@@ -33,6 +33,7 @@ var titleText = function(text)
 
 var App = 
 {
+    // Welcome: prints the welcome message
     welcome: function(ret)
     {
         if (typeof ret === 'undefined') ret = false;
@@ -52,54 +53,7 @@ var App =
         return greetText;
     },
 
-    help: function()
-    {
-        if (System.loggedIn)
-        {    
-            this.echo("\n");
-            this.echo("|  " + commandText("logout") + "             - Logout");
-            this.echo("\n");
-            this.echo("|  " + commandText("whoami") + "             - Print current user name");
-            this.echo("|  " + commandText("whereami") + "           - Print the current forum, thread and post");
-            this.echo("\n");
-            this.echo("|  " + commandText("lf") + "                 - List the subforums of the current forum");
-            this.echo("|  " + commandText("cf") + "                 - Navigate to a forum by index (example 'cf 1')");
-            this.echo("\n");
-        }
-    },
-
-    whoami: function()
-    {
-        console.log("whoami() issued");
-
-        $.soap(
-        {
-            url: '/soapservice.php/',
-            method: 'WhoAmI',
-            data: { },
-
-            success: function (soapResponse) 
-            {
-                var xmlResponse = soapResponse.toXML().documentElement;
-                var userIdArr = xmlResponse.getElementsByTagName("UserID");
-                var usernameArr = xmlResponse.getElementsByTagName("Username");
-                if (userIdArr.length > 0 && usernameArr.length > 0)
-                {
-                    console.log(userIdArr);
-                    console.log(usernameArr);
-                    var userid = userIdArr[0].textContent;
-                    var username = usernameArr[0].textContent;
-                    mainTerminal.echo("You are " + commandText(username) + "[" + userid + "]");
-                    mainTerminal.echo("\n");
-                }
-            },
-            error: function (SOAPResponse) 
-            {
-                mainTerminal.error("Error: " + soapResponse.toXML());
-            }            
-        });
-    },
-
+    // Change to Forum: sets the current forum according to the index
     cf : function(command)
     {
         if (command != undefined)
@@ -148,6 +102,7 @@ var App =
         }
     },
 
+    // List Forums: lists the sub forums of the current forum
     lf: function()
     {
         $.soap(
@@ -195,6 +150,7 @@ var App =
         });
     },
 
+    // List Posts: lists the posts in the current thread
     lp: function()
     {
         var pagenum = (arguments[0] != undefined) ? arguments[0] : 1;
@@ -210,6 +166,9 @@ var App =
                 var items = response.toXML().documentElement.getElementsByTagName('item');
                 if (items.length > 0)
                 {
+                    System.postList = [];
+                    System.lastList = ListEnum.post;
+
                     for (var i=0; i < items.length; i++)
                     {
                         var obj = 
@@ -250,6 +209,7 @@ var App =
         });
     },
 
+    // Change to Thread: sets the current thread according to the index
     ct : function(command)
     {
         if (command != undefined)
@@ -271,6 +231,7 @@ var App =
         }
     },
 
+    // List Threads: lists the threads in the current forum
     lt : function()
     {
         if (System.currentForum.id != -1) 
@@ -328,6 +289,70 @@ var App =
         }
     },
 
+    sp: function(command)
+    {
+        if (command != undefined)
+        {
+            var idx = parseInt(command);
+            if (!isNaN(idx))
+            {
+                $.soap(
+                {
+                    url: '/soapservice.php/',
+                    method: 'GetPostByIndex',
+                    data: { ThreadID: System.currentThread.id, Index: idx, ShowBBCode: false },
+                    success: function (response) 
+                    {
+                        console.log(response.toXML());
+                    },
+                    error: function (SOAPResponse) 
+                    {
+                        mainTerminal.error("Error: " + SOAPResponse.toXML());
+                    }
+                });
+
+            }
+        }
+        else
+        {
+
+        }
+    },
+
+    // WhoAmI: prints the current username anr userid
+    whoami: function()
+    {
+        console.log("whoami() issued");
+
+        $.soap(
+        {
+            url: '/soapservice.php/',
+            method: 'WhoAmI',
+            data: { },
+
+            success: function (soapResponse) 
+            {
+                var xmlResponse = soapResponse.toXML().documentElement;
+                var userIdArr = xmlResponse.getElementsByTagName("UserID");
+                var usernameArr = xmlResponse.getElementsByTagName("Username");
+                if (userIdArr.length > 0 && usernameArr.length > 0)
+                {
+                    console.log(userIdArr);
+                    console.log(usernameArr);
+                    var userid = userIdArr[0].textContent;
+                    var username = usernameArr[0].textContent;
+                    mainTerminal.echo("You are " + commandText(username) + "[" + userid + "]");
+                    mainTerminal.echo("\n");
+                }
+            },
+            error: function (SOAPResponse) 
+            {
+                mainTerminal.error("Error: " + soapResponse.toXML());
+            }            
+        });
+    },
+
+    // WhereAmI: prints the current forum, thread and post
     whereami : function()
     {
         this.echo("Current Board  : " + commandText(System.bburl));
@@ -346,9 +371,21 @@ var App =
         this.echo("\n"); 
     },
 
-    menu: function()
+    // Help: prints the system help
+    help: function()
     {
-        this.exec('help');
+        if (System.loggedIn)
+        {    
+            this.echo("\n");
+            this.echo("|  " + commandText("logout") + "             - Logout");
+            this.echo("\n");
+            this.echo("|  " + commandText("whoami") + "             - Print current user name");
+            this.echo("|  " + commandText("whereami") + "           - Print the current forum, thread and post");
+            this.echo("\n");
+            this.echo("|  " + commandText("lf") + "                 - List the subforums of the current forum");
+            this.echo("|  " + commandText("cf") + "                 - Navigate to a forum by index (example 'cf 1')");
+            this.echo("\n");
+        }
     },
 }
 
@@ -404,6 +441,13 @@ var Options =
                 {
                     passAlong = false;
                     terminal.exec('ct '+idx, false);
+                    break;
+                }
+
+                case ListEnum.post:
+                {
+                    passAlone = false;
+                    terminal.exec('sp ' + idx, false);
                     break;
                 }
 
