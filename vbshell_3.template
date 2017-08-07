@@ -13,9 +13,10 @@ $stylevar[htmldoctype]
 
 <style type="text/css">
 .terminal, .cmd, .terminal .terminal-output div div, .cmd .prompt {
-    font-size: 16px;
-    line-height: 18px;
-    font-family: Monaco, 'Source Code Pro', FreeMono, monospace;
+    font-size: 14px;
+    line-height: 16px;
+    font-family: Menlo, Monaco, 'Source Code Pro', FreeMono, monospace;
+    font-weight:normal; 
 }
 </style>
 

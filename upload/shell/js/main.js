@@ -31,11 +31,6 @@ var titleText = function(text)
     return "[[u;inherit;]" + text + "]";
 }
 
-var errorText = function(text)
-{
-    return "[[g;#FF0000;]" + text + "]";
-}
-
 var App = 
 {
     welcome: function(ret)
@@ -73,22 +68,6 @@ var App =
         }
     },
 
-    // logout: function()
-    // {
-    //     // console.log("command: " + command);
-    //     // console.log("term   : " + term);
-    //     console.log("logout command issued");
-    //     // var test = $.post('/index.php', {command: 'hi!'}).then(
-    //     //     function(response)
-    //     //     {
-    //     //         this.echo("THIS IS A RESPONSE!");
-    //     //     });
-    //     var test = $.post('/soapservice.php');
-
-    //     this.echo("RESPONSE: " + test);
-    //     console.log(test);
-    // },
-
     whoami: function()
     {
         console.log("whoami() issued");
@@ -116,7 +95,7 @@ var App =
             },
             error: function (SOAPResponse) 
             {
-                mainTerminal.echo(errorText("Error: ") + soapResponse.toXML());
+                mainTerminal.error("Error: " + soapResponse.toXML());
             }            
         });
     },
@@ -126,7 +105,7 @@ var App =
         if (command != undefined)
         {
             var idx = parseInt(command);
-            if (command == "..")
+            if (command == ".." && System.currentForum.id != -1)
             {
                 $.soap(
                 {
@@ -143,11 +122,12 @@ var App =
                             System.currentForum.id = $(currentEl).find("ForumID").text();
                             mainTerminal.echo("Current forum: " + commandText(System.currentForum.title));
                             mainTerminal.echo();
+                            mainTerminal.set_prompt("[[;#00ffff;]{0}]> ".format(System.currentForum.title));
                         }
                     },
                     error: function (SOAPResponse) 
                     {
-                        mainTerminal.echo(errorText("Error: ") + SOAPResponse.toXML());
+                        mainTerminal.error("Error: " + SOAPResponse.toXML());
                     }
                 });
             }
@@ -156,15 +136,17 @@ var App =
                 System.currentForum.id = System.forumList[idx-1].forumid;
                 System.currentForum.title = System.forumList[idx-1].title;
                 mainTerminal.echo("Current forum: " + commandText(System.currentForum.title));
+                mainTerminal.echo();
+                mainTerminal.set_prompt("[[;#00ffff;]{0}]> ".format(System.currentForum.title));
             }
             else
             {
-                mainTerminal.echo(errorText("Invalid index"));
+                mainTerminal.error("Invalid index");
             }
         }
         else
         {
-            mainTerminal.echo(errorText("Invalid index"));
+            mainTerminal.error("Invalid index");
         }
     },
 
@@ -214,7 +196,7 @@ var App =
                 },
                 error: function (SOAPResponse) 
                 {
-                    mainTerminal.echo(errorText("Error: ") + soapResponse.toXML());
+                    mainTerminal.echo("Error: " + soapResponse.toXML());
                 }
             });
         }
@@ -237,6 +219,22 @@ var App =
 
 jQuery(document).ready(function($) 
 {
+    // add a string formatter
+    if (!String.prototype.format) 
+    {
+        String.prototype.format = function () 
+        {
+            var args = arguments;
+            return this.replace(/{(\d+)}/g, function (match, number) 
+            {
+                return typeof args[number] != 'undefined'
+                    ? args[number]
+                    : match
+                    ;
+            });
+        };
+    }
+
     if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) 
     {
         window.location.href = System.bburl;
