@@ -74,62 +74,9 @@ function ErrorResult($text)
     return $result;    
 }
 
-function RegisterService($who)
-{
-    $result = array();
-    $result['Code'] = 0;
-    return $result;
-	// global $db,$vbulletin,$server;
-	// $result = array();
-	
-	// if (!$vbulletin->options['vbb_serviceonoff'])
-	// {
-	// 	$result['Code'] = 1;
-	// 	$result['Text'] = 'vbb_service_turned_off';
-	// }	
-	// else if ($vbulletin->options['vbb_servicepw'] != $_SERVER['PHP_AUTH_PW'])
-	// {
-	// 	$result['Code'] = 1;
-	// 	$result['Text'] = 'vbb_invalid_servicepw';
-	// }
-	// else
-	// {
-    //     $userid = fetch_userid_by_service($who['ServiceName'],$who['Username']);
-
-    //     if (empty($userid) || $userid <= 0)
-    //     {
-    //         $result['Code'] = 1;
-    //         $result['Text'] = 'invalid_user';
-    //     }
-    //     else
-    //     {
-    //         unset($vbulletin->userinfo);
-
-    //         $vbulletin->userinfo =& fetch_userinfo($userid);
-    //         $permissions = cache_permissions($vbulletin->userinfo);        
-            
-    //         $vbulletin->options['hourdiff'] = (date('Z', TIMENOW) / 3600 - $vbulletin->userinfo['timezoneoffset']) * 3600;
-    //         fetch_options_overrides($vbulletin->userinfo);    
-    //         fetch_time_data();
-            
-	// 	    // everything is ok
-	// 	    $result['Code'] = 0;
-    //     }
-	// }
-	
-	// return $result;
-}
-
 function GetPostByIndex($threadid,$index,$showbbcode = false)
 {
     global $db,$vbulletin,$server,$structtypes,$lastpostarray;
-    
-    $result = RegisterService($who);
-    if ($result['Code'] != 0)
-    {
-        $retval['Result'] = $result;
-        return $retval;
-    }    
     
     if ($index > 0)
     {
@@ -142,11 +89,9 @@ function GetPostByIndex($threadid,$index,$showbbcode = false)
             {
                 $postinfo['pagetext'] = strip_bbcode($postinfo['pagetext'],true,false,false);  
             }
+
             $postinfo['datelinetext'] = vbdate($vbulletin->options['dateformat'],$postinfo['dateline'],true)." ".vbdate($vbulletin->options['timeformat'],$postinfo['dateline'],true);
-            
-            
             $retval['Post'] = ConsumeArray($postinfo,$structtypes['Post']);    
-            
         }
     
         if ($postinfo['postid'] > 0)
@@ -160,8 +105,7 @@ function GetPostByIndex($threadid,$index,$showbbcode = false)
     $result['RemoteUser'] = ConsumeArray($vbulletin->userinfo,$structtypes['RemoteUser']); 
     $retval['Result'] = $result;
    
-    return $retval;    
-    
+    return $retval;
 }
 
 function GetPostNotifications($dodelete)
@@ -251,13 +195,6 @@ function GetPostNotifications($dodelete)
 function GetThread($who,$threadid)
 {
     global $db,$vbulletin,$server,$structtypes,$lastpostarray;
-    
-    $result = RegisterService($who);
-    if ($result['Code'] != 0)
-    {
-        $retval['Result'] = $result;
-        return $retval;
-    }  
     
     $threadinfo = $thread = fetch_threadinfo($threadid);    
     $forum = fetch_foruminfo($thread['forumid']);
@@ -611,13 +548,6 @@ function MarkForumRead($who,$forumid)
 {
     global $db,$vbulletin,$server,$structtypes,$lastpostarray;
     
-    $result = RegisterService($who);
-    if ($result['Code'] != 0)
-    {
-        $retval['Result'] = $result;
-        return $retval;
-    }  
-
     $foruminfo = fetch_foruminfo($forumid);
     mark_forum_read($foruminfo,$vbulletin->userinfo['userid'],TIMENOW);
 
@@ -630,13 +560,6 @@ function MarkForumRead($who,$forumid)
 function MarkThreadRead($who,$threadid)
 {
     global $db,$vbulletin,$server,$structtypes,$lastpostarray;
-    
-    $result = RegisterService($who);
-    if ($result['Code'] != 0)
-    {
-        $retval['Result'] = $result;
-        return $retval;
-    }
 
     $threadinfo = fetch_threadinfo($threadid);
     $foruminfo = fetch_foruminfo($threadinfo['forumid']);
@@ -652,13 +575,6 @@ function MarkThreadRead($who,$threadid)
 function PostReply($who,$threadid,$pagetext,$quotepostid = 0)
 {
     global $db,$vbulletin,$server,$structtypes,$lastpostarray;
-
-    $result = RegisterService($who);
-    if ($result['Code'] != 0)
-    {
-        $retval['Result'] = $result;
-        return $retval;
-    } 
 
     $threadinfo = fetch_threadinfo($threadid);
     $foruminfo = fetch_foruminfo($threadinfo['forumid'],false);
@@ -717,13 +633,6 @@ function PostNewThread($who,$forumid,$title,$pagetext)
 {
     global $db,$vbulletin,$server,$structtypes,$lastpostarray;
 
-    $result = RegisterService($who);
-    if ($result['Code'] != 0)
-    {
-        $retval['Result'] = $result;
-        return $retval;
-    }
-    
     $insertid = 0;
     $foruminfo = fetch_foruminfo($forumid,false);
     if ($foruminfo['forumid'] > 0)
@@ -786,13 +695,6 @@ function PostNewThread($who,$forumid,$title,$pagetext)
 function SetIMNotification($who,$on)
 {
     global $db,$vbulletin,$server,$structtypes,$lastpostarray;
-    
-    $result = RegisterService($who);
-    if ($result['Code'] != 0)
-    {
-        $retval['Result'] = $result;
-        return $retval;
-    } 
 
     $userid = $vbulletin->userinfo['userid'];
     $onoff = 0;
@@ -816,14 +718,7 @@ function SetIMNotification($who,$on)
 function SubscribeThread($who,$threadid)
 {
     global $db,$vbulletin,$server,$structtypes,$lastpostarray;
-    
-    $result = RegisterService($who);
-    if ($result['Code'] != 0)
-    {
-        $retval['Result'] = $result;
-        return $retval;
-    }
-    
+
     $threadinfo = fetch_threadinfo($threadid);
     $foruminfo = fetch_foruminfo($threadinfo['forumid'],false);
     
@@ -888,13 +783,6 @@ function UnSubscribeThread($who,$threadid)
 {
      global $db,$vbulletin,$server,$structtypes,$lastpostarray;
 
-    $result = RegisterService($who);
-    if ($result['Code'] != 0)
-    {
-        $retval['Result'] = $result;
-        return $retval;
-    }  
-    
     if (is_numeric($threadid))
     { // delete this specific thread subscription
     

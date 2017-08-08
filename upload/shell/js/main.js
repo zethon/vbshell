@@ -13,7 +13,7 @@ var System =
     
     currentForum: {id: -1},
     currentThread: {id: -1},
-    currentPost: {id: -1},
+    currentPost: {idx: -1},
 
     lastList: ListEnum.none,
     forumList:[],
@@ -68,11 +68,11 @@ var App =
                     data: { ForumId: System.currentForum.id },
                     success: function (response) 
                     {
-                        console.log(response.toXML());
                         var currentEl = response.toXML().documentElement.getElementsByTagName('CurrentForum');
                         if (currentEl.length > 0)
                         {
                             System.currentThread = {};
+                            System.currentPost = {};
                             System.currentForum.title = $(currentEl).find("Title").text();
                             System.currentForum.id = $(currentEl).find("ForumID").text();
                             mainTerminal.exec('lf', true);
@@ -87,6 +87,7 @@ var App =
             else if (!isNaN(idx) && (idx-1) <= System.forumList.length)
             {
                 System.currentThread = {};
+                System.currentPost = {};
                 System.currentForum.id = System.forumList[idx-1].forumid;
                 System.currentForum.title = System.forumList[idx-1].title;
                 this.exec('lf', true);
@@ -185,7 +186,7 @@ var App =
 
                         System.postList.push(obj);
 
-                        var trimmedString = obj.pagetext.substr(0, 60);
+                        var trimmedString = obj.pagetext.substr(0, 60).replace(/\n|\r/g, "");
                         trimmedString = trimmedString.substr(0, Math.min(trimmedString.length, trimmedString.lastIndexOf(" ")))
                         trimmedString = "\"" + trimmedString + "\"";
 
@@ -197,8 +198,6 @@ var App =
                         {
                             mainTerminal.echo("[ [[b;#2c9995;]"+ (i+1) +"] ] "+trimmedString+", " + obj.datelinetext + " by " + obj.username);
                         }
-                        
-
                     }                        
                 }
             },
@@ -218,7 +217,8 @@ var App =
             if (!isNaN(idx) && (idx-1) <= System.threadList.length)
             {
                 var t = System.threadList[idx-1];
-
+                
+                System.currentPost = {};
                 System.currentThread = {};
                 System.currentThread.id = t.threadid;
                 System.currentThread.title = t.title;
@@ -294,7 +294,7 @@ var App =
         if (command != undefined)
         {
             var idx = parseInt(command);
-            if (!isNaN(idx))
+            if (!isNaN(idx) && (idx-1) >= 0)
             {
                 $.soap(
                 {
@@ -303,7 +303,21 @@ var App =
                     data: { ThreadID: System.currentThread.id, Index: idx, ShowBBCode: false },
                     success: function (response) 
                     {
-                        console.log(response.toXML());
+                        var post = response.toXML().documentElement.getElementsByTagName('Post');
+                        var obj = 
+                        {
+                            postid: parseInt($(post[0]).find("PostID").text()),
+                            username: $(post[0]).find("Username").text(),
+                            pagetext: $(post[0]).find("PageText").text(),
+                            title: $(post[0]).find("Title").text(),
+                            dateline: parseInt($(post[0]).find("DateLine").text()),
+                            datelinetext: $(post[0]).find("DateLineText").text(),
+                            ipaddress: $(post[0]).find("IpAddress").text(),
+                        };
+
+                        System.currentPost.idx = idx;
+                        mainTerminal.echo("[[b;#f4f4f4;]#" + idx + " " + obj.username + " at " + obj.datelinetext + "]");
+                        mainTerminal.echo(obj.pagetext);
                     },
                     error: function (SOAPResponse) 
                     {
@@ -322,8 +336,6 @@ var App =
     // WhoAmI: prints the current username anr userid
     whoami: function()
     {
-        console.log("whoami() issued");
-
         $.soap(
         {
             url: '/soapservice.php/',
@@ -337,8 +349,6 @@ var App =
                 var usernameArr = xmlResponse.getElementsByTagName("Username");
                 if (userIdArr.length > 0 && usernameArr.length > 0)
                 {
-                    console.log(userIdArr);
-                    console.log(usernameArr);
                     var userid = userIdArr[0].textContent;
                     var username = usernameArr[0].textContent;
                     mainTerminal.echo("You are " + commandText(username) + "[" + userid + "]");
@@ -462,11 +472,21 @@ var Options =
         }
         else if (command == "n")
         {
-            console.log("NEXT");
+            if (System.currentPost.idx != undefined)
+            {
+                var newidx = System.currentPost.idx + 1;
+                terminal.exec('sp ' + newidx, false);
+                passAlong = false;
+            }
         }
         else if (command == "p")
         {
-            console.log("PREV");
+            if (System.currentPost.idx != undefined)
+            {
+                var newidx = System.currentPost.idx - 1;
+                terminal.exec('sp ' + newidx, false);
+                passAlong = false;
+            }
         }
 
         return passAlong;
