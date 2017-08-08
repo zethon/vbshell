@@ -13,7 +13,11 @@ var System =
     
     currentForum: {id: -1},
     currentThread: {id: -1},
-    currentPost: {idx: -1},
+
+    threadNav: { pagenum: 1, perpage: 10 },
+    postNav: { idx: 1, pp: 10 },
+    currentThreadPageIdx: 0,
+    currentPostPageIdx: 0,
 
     lastList: ListEnum.none,
     forumList:[],
@@ -72,7 +76,7 @@ var App =
                         if (currentEl.length > 0)
                         {
                             System.currentThread = {};
-                            System.currentPost = {};
+                            currentPostPageIdx = 1;
                             System.currentForum.title = $(currentEl).find("Title").text();
                             System.currentForum.id = $(currentEl).find("ForumID").text();
                             mainTerminal.exec('lf', true);
@@ -87,7 +91,7 @@ var App =
             else if (!isNaN(idx) && (idx-1) <= System.forumList.length)
             {
                 System.currentThread = {};
-                System.currentPost = {};
+                currentPostPageIdx = 1;
                 System.currentForum.id = System.forumList[idx-1].forumid;
                 System.currentForum.title = System.forumList[idx-1].title;
                 this.exec('lf', true);
@@ -190,6 +194,7 @@ var App =
                         trimmedString = trimmedString.substr(0, Math.min(trimmedString.length, trimmedString.lastIndexOf(" ")))
                         trimmedString = "\"" + trimmedString + "\"";
 
+                        var index = (i+1) + (perpage * (pagenum - 1));
                         if (obj.isnew)
                         {
                             mainTerminal.echo("[ [[b;#2c9995;]"+ (i+1) +"] ] [[b;#f4f4f4;]"+trimmedString+"], " + obj.datelinetext + " by " + obj.username);
@@ -218,7 +223,7 @@ var App =
             {
                 var t = System.threadList[idx-1];
                 
-                System.currentPost = {};
+                currentPostPageIdx = 1;
                 System.currentThread = {};
                 System.currentThread.id = t.threadid;
                 System.currentThread.title = t.title;
@@ -236,9 +241,30 @@ var App =
     {
         if (System.currentForum.id != -1) 
         {
-            var pagenum = (arguments[0] != undefined) ? arguments[0] : 1;
-            var perpage = (arguments[1] != undefined) ? arguments[1] : 10;
+            var pagenum = 1;
+            var perpage = System.threadNav.perpage;
 
+            // handle the page # if passed in
+            if (arguments.length > 0)
+            {
+                var pnInt = parseInt(arguments[0]);
+                if (!isNaN(pnInt) && pnInt > 0)
+                {
+                    pagenum = pnInt;
+                }
+            }
+
+            // handle the perpage setting if passed in
+            if (arguments.length > 1)
+            {
+                var ppInt = parseInt(arguments[1]);
+                perpage = ppInt;
+            }
+
+            console.log("listing thread, pagenum=" + pagenum + " perpage=" + perpage);
+            System.threadNav.pagenum = pagenum;
+            System.threadNav.perpage = perpage;
+            
             $.soap(
             {
                 url: '/soapservice.php/',
@@ -251,6 +277,8 @@ var App =
                     {
                         System.threadList = [];
                         System.lastList = ListEnum.thread;
+
+                        mainTerminal.echo("Page Number: [[b;#2c9995;]" + pagenum + "] Per Page: [[b;#2c9995;]" + perpage + "]");
 
                         for (var i=0; i < items.length; i++)
                         {
@@ -315,7 +343,7 @@ var App =
                             ipaddress: $(post[0]).find("IpAddress").text(),
                         };
 
-                        System.currentPost.idx = idx;
+                        currentPostPageIdx = idx;
                         mainTerminal.echo("[[b;#f4f4f4;]#" + idx + " " + obj.username + " at " + obj.datelinetext + "]");
                         mainTerminal.echo(obj.pagetext);
                     },
@@ -373,10 +401,10 @@ var App =
             this.echo("Current Thread : " + commandText(System.currentThread.title) + " [" + System.currentThread.id + "]");
         }
 
-        if (System.currentPost != undefined && System.currentPost.id != -1)
-        {
-            this.echo("Current Post : " + commandText(System.currentPost.title) + " [" + System.currentPost.id + "]");
-        }
+        // if (System.currentPost != undefined && System.currentPost.id != -1)
+        // {
+        //     this.echo("Current Post : " + commandText(System.currentPost.title) + " [" + System.currentPost.id + "]");
+        // }
         
         this.echo("\n"); 
     },
@@ -472,21 +500,35 @@ var Options =
         }
         else if (command == "n")
         {
-            if (System.currentPost.idx != undefined)
+            switch (System.lastList)
             {
-                var newidx = System.currentPost.idx + 1;
-                terminal.exec('sp ' + newidx, false);
-                passAlong = false;
+                case ListEnum.thread:
+                {
+                    var newidx = System.threadNav.pagenum + 1;
+                    terminal.exec('lt ' + newidx + ' ' + System.threadNav.perpage);
+                    passAlong = false;
+                    break;
+                }
+
+                case ListEnum.post:
+                {
+                    var newidx = currentPostPageIdx + 1;
+                    terminal.exec('sp ' + newidx, false);
+                    passAlong = false;
+                    break;
+                }
+
+                default: break;
             }
         }
         else if (command == "p")
         {
-            if (System.currentPost.idx != undefined)
-            {
-                var newidx = System.currentPost.idx - 1;
-                terminal.exec('sp ' + newidx, false);
-                passAlong = false;
-            }
+            // if (System.currentPost.idx != undefined)
+            // {
+            //     var newidx = System.currentPost.idx - 1;
+            //     terminal.exec('sp ' + newidx, false);
+            //     passAlong = false;
+            // }
         }
 
         return passAlong;
