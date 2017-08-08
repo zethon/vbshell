@@ -197,11 +197,11 @@ var App =
                         var index = (i+1) + (perpage * (pagenum - 1));
                         if (obj.isnew)
                         {
-                            mainTerminal.echo("[ [[b;#2c9995;]"+ (i+1) +"] ] [[b;#f4f4f4;]"+trimmedString+"], " + obj.datelinetext + " by " + obj.username);
+                            mainTerminal.echo("[ [[b;#2c9995;]"+ (index) +"] ] [[b;#f4f4f4;]"+trimmedString+"], " + obj.datelinetext + " by " + obj.username);
                         }
                         else
                         {
-                            mainTerminal.echo("[ [[b;#2c9995;]"+ (i+1) +"] ] "+trimmedString+", " + obj.datelinetext + " by " + obj.username);
+                            mainTerminal.echo("[ [[b;#2c9995;]"+ (index) +"] ] "+trimmedString+", " + obj.datelinetext + " by " + obj.username);
                         }
                     }                        
                 }
