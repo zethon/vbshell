@@ -523,12 +523,26 @@ var Options =
         }
         else if (command == "p")
         {
-            // if (System.currentPost.idx != undefined)
-            // {
-            //     var newidx = System.currentPost.idx - 1;
-            //     terminal.exec('sp ' + newidx, false);
-            //     passAlong = false;
-            // }
+            switch (System.lastList)
+            {
+                case ListEnum.thread:
+                {
+                    var newidx = System.threadNav.pagenum - 1;
+                    terminal.exec('lt ' + newidx + ' ' + System.threadNav.perpage);
+                    passAlong = false;
+                    break;
+                }
+
+                case ListEnum.post:
+                {
+                    var newidx = currentPostPageIdx - 1;
+                    terminal.exec('sp ' + newidx, false);
+                    passAlong = false;
+                    break;
+                }
+
+                default: break;
+            }
         }
 
         return passAlong;
