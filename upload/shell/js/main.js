@@ -445,18 +445,18 @@ var Options =
     convertLinks: true,
     onInit: function(terminal) 
     {
-        terminal.set_prompt("[ [[b;#4ef021;]" + System.bbtitle + "] ]$ ")
+        terminal.set_prompt("[[b;#4ef021;]" + System.bbtitle + "]$ ")
     },
 
     onAfterCommand: function(terminal)
     {
         if (System.currentForum.id == -1)
         {
-            terminal.set_prompt("[ [[b;#4ef021;]" + System.bbtitle + "] ]$ ")
+            terminal.set_prompt("[[b;#4ef021;]" + System.bbtitle + "]$ ")
         }
         else
         {
-            mainTerminal.set_prompt("[ [[b;#4ef021;]" + System.bbtitle + "]:[[;#00ffff;]{0}] ]$ ".format(System.currentForum.title));
+            mainTerminal.set_prompt("[[b;#4ef021;]" + System.bbtitle + "]:[[;#00ffff;]{0}]$ ".format(System.currentForum.title));
         }
     },
 
