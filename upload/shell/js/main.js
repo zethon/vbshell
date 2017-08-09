@@ -2,7 +2,14 @@
 var mainTerminal = {};
 
 // the types of lists we can ask for
-var ListEnum = { "none": 0, "forum":1, "thread":2, "post":3 };
+var ListEnum = 
+{ 
+    "none": 0,      
+    "forum":1,      // `lf`, user listed some forums
+    "thread":2,     // `lt`, user listed some threads IN a forum
+    "post":3,       // `lp`, user listed multiple posts
+    "postlist":4    // `sp`, user viewed (listed) a single post
+};
 
 var System = 
 {
@@ -11,13 +18,27 @@ var System =
     username: "",
     bburl: "",
     
-    currentForum: {id: -1},
-    currentThread: {id: -1},
+    // holds information, such as the name and id, of the current 
+    // forum, thead (TODO: and possibly post?)
+    currentForum: {id: -1},     // `cf`, changes when user changes forum
+    currentThread: {id: -1},    // `ct`, changes when the user changes thread
 
-    threadNav: { pagenum: 1, perpage: 10 },
-    postNav: { idx: 1, pp: 10 },
-    currentThreadPageIdx: 0,
-    currentPostPageIdx: 0,
+    // the commands 'n' and 'p' should scroll through the board in one
+    // of three ways depending
+    // 
+    // (1) scroll through the pages of a forum, listing threads, these lists
+    //     have a non-incrementing index (hence, the list will always start
+    //     with #1 and increment. 
+    threadNav: { pagenum: 1, perpage: 10 }, 
+    //
+    // (2) scroll through the pages of a thread, listing the posts, the
+    //     posts will be numbered by the index of the post in the thread,
+    //     hence listing the second page of 5 posts per page will result
+    //     in the posts #6, #7... #10
+    postPageNav: { pagenum: 1, perpage: 10 },
+    //
+    // (3) scroll through each individual post. 
+    postIndex: 1,
 
     lastList: ListEnum.none,
     forumList:[],
@@ -58,6 +79,7 @@ var App =
     },
 
     // Change to Forum: sets the current forum according to the index
+    // `cf <index>` - <index> is the index of the forum from the last `lf` command
     cf : function(command)
     {
         if (command != undefined)
@@ -75,10 +97,18 @@ var App =
                         var currentEl = response.toXML().documentElement.getElementsByTagName('CurrentForum');
                         if (currentEl.length > 0)
                         {
-                            System.currentThread = {};
-                            currentPostPageIdx = 1;
+                            // set the curret forum info
                             System.currentForum.title = $(currentEl).find("Title").text();
                             System.currentForum.id = $(currentEl).find("ForumID").text();
+
+                            // reset the current thread and navigation structures
+                            System.currentThread = {};
+                            System.threadNav = { pagenum: 1, perpage: 10};
+                            System.postPageNav = { pagenum: 1, perpage: 10 };
+                            postIndx = 1;
+
+                            // TODO: have a setting ot `cf` switch that will automatically
+                            // list the threads when `cf`'ing into a forum
                             mainTerminal.exec('lf', true);
                         }
                     },
@@ -214,16 +244,19 @@ var App =
     },
 
     // Change to Thread: sets the current thread according to the index
-    ct : function(command)
+    // `ct <index>` - Pass the index of the thread from the previous `lt`
+    ct: function(command)
     {
         if (command != undefined)
         {
             var idx = parseInt(command);
             if (!isNaN(idx) && (idx-1) <= System.threadList.length)
             {
+                // reset the post-page and single-post navigation
+                postPageNav = { pagenum: 1, perpage: 10 };
+                postIndex = 1;
+
                 var t = System.threadList[idx-1];
-                
-                currentPostPageIdx = 1;
                 System.currentThread = {};
                 System.currentThread.id = t.threadid;
                 System.currentThread.title = t.title;
@@ -248,9 +281,17 @@ var App =
             if (arguments.length > 0)
             {
                 var pnInt = parseInt(arguments[0]);
-                if (!isNaN(pnInt) && pnInt > 0)
+                if (!isNaN(pnInt))
                 {
-                    pagenum = pnInt;
+                    if (pnInt > 0)
+                    {                        
+                        pagenum = pnInt;
+                    }
+                    else
+                    {
+                        mainTerminal.error("Invalid page number");
+                        return;
+                    }
                 }
             }
 
@@ -505,18 +546,18 @@ var Options =
                 case ListEnum.thread:
                 {
                     var newidx = System.threadNav.pagenum + 1;
-                    terminal.exec('lt ' + newidx + ' ' + System.threadNav.perpage);
+                    terminal.exec('lt ' + newidx + ' ' + System.threadNav.perpage, false);
                     passAlong = false;
                     break;
                 }
 
-                case ListEnum.post:
-                {
-                    var newidx = currentPostPageIdx + 1;
-                    terminal.exec('sp ' + newidx, false);
-                    passAlong = false;
-                    break;
-                }
+                // case ListEnum.post:
+                // {
+                //     var newidx = currentPostPageIdx + 1;
+                //     terminal.exec('sp ' + newidx, false);
+                //     passAlong = false;
+                //     break;
+                // }
 
                 default: break;
             }
@@ -528,18 +569,28 @@ var Options =
                 case ListEnum.thread:
                 {
                     var newidx = System.threadNav.pagenum - 1;
-                    terminal.exec('lt ' + newidx + ' ' + System.threadNav.perpage);
-                    passAlong = false;
+                    if (newidx > 0)
+                    {
+                        terminal.exec('lt ' + newidx + ' ' + System.threadNav.perpage, false);
+                        passAlong = false;
+                    }
+                    else
+                    {
+                        mainTerminal.echo("No previous page");
+                        passAlong = true;
+                    }
+                    
+                    
                     break;
                 }
 
-                case ListEnum.post:
-                {
-                    var newidx = currentPostPageIdx - 1;
-                    terminal.exec('sp ' + newidx, false);
-                    passAlong = false;
-                    break;
-                }
+                // case ListEnum.post:
+                // {
+                //     var newidx = currentPostPageIdx - 1;
+                //     terminal.exec('sp ' + newidx, false);
+                //     passAlong = false;
+                //     break;
+                // }
 
                 default: break;
             }
