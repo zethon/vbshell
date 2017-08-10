@@ -80,7 +80,7 @@ var App =
 
     // Change to Forum: sets the current forum according to the index
     // `cf <index>` - <index> is the index of the forum from the last `lf` command
-    cf : function(command)
+    cf: function(command)
     {
         if (command != undefined)
         {
@@ -105,6 +105,7 @@ var App =
                             System.currentThread = {};
                             System.threadNav = { pagenum: 1, perpage: 10};
                             System.postPageNav = { pagenum: 1, perpage: 10 };
+                            System.postIndex = 1;
                             postIndx = 1;
 
                             // TODO: have a setting ot `cf` switch that will automatically
@@ -290,6 +291,7 @@ var App =
                 System.currentThread = {};
                 System.currentThread.id = t.threadid;
                 System.currentThread.title = t.title;
+                System.postIndex = 1;
                 this.exec('lp');
             }
             else
@@ -412,10 +414,17 @@ var App =
                             ipaddress: $(post[0]).find("IpAddress").text(),
                         };
 
-                        System.lastList = ListEnum.post;
-                        System.postIndex = idx;
-                        mainTerminal.echo("[[b;#f4f4f4;]#" + idx + " " + obj.username + " at " + obj.datelinetext + "]");
-                        mainTerminal.echo(obj.pagetext);
+                        if (!isNaN(obj.postid))
+                        {
+                            System.lastList = ListEnum.post;
+                            System.postIndex = idx;
+                            mainTerminal.echo("[[b;#f4f4f4;]#" + idx + " " + obj.username + " at " + obj.datelinetext + "]");
+                            mainTerminal.echo(obj.pagetext);
+                        }
+                        else
+                        {
+                            mainTerminal.echo("Invalid post index '" + idx + "'");
+                        }
                     },
                     error: function (SOAPResponse) 
                     {
