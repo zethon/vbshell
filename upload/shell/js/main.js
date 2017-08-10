@@ -7,8 +7,8 @@ var ListEnum =
     "none": 0,      
     "forum":1,      // `lf`, user listed some forums
     "thread":2,     // `lt`, user listed some threads IN a forum
-    "post":3,       // `lp`, user listed multiple posts
-    "postlist":4    // `sp`, user viewed (listed) a single post
+    "postlist":3,   // `lp`, user listed multiple posts
+    "post":4        // `sp`, user viewed (listed) a single post
 };
 
 var System = 
@@ -188,59 +188,89 @@ var App =
     // List Posts: lists the posts in the current thread
     lp: function()
     {
-        var pagenum = (arguments[0] != undefined) ? arguments[0] : 1;
-        var perpage = (arguments[1] != undefined) ? arguments[1] : 10;
-
-        $.soap(
+        if (System.currentForum.id != -1) 
         {
-            url: '/soapservice.php/',
-            method: 'ListPosts',
-            data: { ThreadID: System.currentThread.id, PageNumber: pagenum, PerPage: perpage },
-            success: function (response) 
+            var pagenum = 1;
+            var perpage = System.postPageNav.perpage;
+
+            // handle the page # if passed in
+            if (arguments.length > 0)
             {
-                var items = response.toXML().documentElement.getElementsByTagName('item');
-                if (items.length > 0)
+                var pnInt = parseInt(arguments[0]);
+                if (!isNaN(pnInt))
                 {
-                    System.postList = [];
-                    System.lastList = ListEnum.post;
-
-                    for (var i=0; i < items.length; i++)
+                    if (pnInt > 0)
+                    {                        
+                        pagenum = pnInt;
+                    }
+                    else
                     {
-                        var obj = 
-                        {
-                            postid: parseInt($(items[i]).find("PostID").text()),
-                            username: $(items[i]).find("Username").text(),
-                            pagetext: $(items[i]).find("PageText").text(),
-                            title: $(items[i]).find("Title").text(),
-                            dateline: parseInt($(items[i]).find("DateLine").text()),
-                            datelinetext: $(items[i]).find("DateLineText").text(),
-                            ipaddress: $(items[i]).find("IpAddress").text(),
-                            isnew: ($(items[i]).find("IsNew").text() == "true"),
-                        };
-
-                        System.postList.push(obj);
-
-                        var trimmedString = obj.pagetext.substr(0, 60).replace(/\n|\r/g, "");
-                        trimmedString = trimmedString.substr(0, Math.min(trimmedString.length, trimmedString.lastIndexOf(" ")))
-                        trimmedString = "\"" + trimmedString + "\"";
-
-                        var index = (i+1) + (perpage * (pagenum - 1));
-                        if (obj.isnew)
-                        {
-                            mainTerminal.echo("[ [[b;#2c9995;]"+ (index) +"] ] [[b;#f4f4f4;]"+trimmedString+"], " + obj.datelinetext + " by " + obj.username);
-                        }
-                        else
-                        {
-                            mainTerminal.echo("[ [[b;#2c9995;]"+ (index) +"] ] "+trimmedString+", " + obj.datelinetext + " by " + obj.username);
-                        }
-                    }                        
+                        mainTerminal.error("Invalid page number");
+                        return;
+                    }
                 }
-            },
-            error: function (SOAPResponse) 
-            {
-                mainTerminal.error("Error: " + SOAPResponse.toXML());
             }
-        });
+
+            // handle the perpage setting if passed in
+            if (arguments.length > 1)
+            {
+                var ppInt = parseInt(arguments[1]);
+                perpage = ppInt;
+            }
+
+            $.soap(
+            {
+                url: '/soapservice.php/',
+                method: 'ListPosts',
+                data: { ThreadID: System.currentThread.id, PageNumber: pagenum, PerPage: perpage },
+                success: function (response) 
+                {
+                    var items = response.toXML().documentElement.getElementsByTagName('item');
+                    if (items.length > 0)
+                    {
+                        System.postList = [];
+                        System.lastList = ListEnum.postlist;
+                        System.postPageNav.pagenum = pagenum;
+                        System.postPageNav.perpage = perpage;
+
+                        for (var i=0; i < items.length; i++)
+                        {
+                            var obj = 
+                            {
+                                postid: parseInt($(items[i]).find("PostID").text()),
+                                username: $(items[i]).find("Username").text(),
+                                pagetext: $(items[i]).find("PageText").text(),
+                                title: $(items[i]).find("Title").text(),
+                                dateline: parseInt($(items[i]).find("DateLine").text()),
+                                datelinetext: $(items[i]).find("DateLineText").text(),
+                                ipaddress: $(items[i]).find("IpAddress").text(),
+                                isnew: ($(items[i]).find("IsNew").text() == "true"),
+                            };
+
+                            System.postList.push(obj);
+
+                            var trimmedString = obj.pagetext.substr(0, 60).replace(/\n|\r/g, "");
+                            trimmedString = trimmedString.substr(0, Math.min(trimmedString.length, trimmedString.lastIndexOf(" ")))
+                            trimmedString = "\"" + trimmedString + "\"";
+
+                            var index = (i+1) + (perpage * (pagenum - 1));
+                            if (obj.isnew)
+                            {
+                                mainTerminal.echo("[ [[b;#2c9995;]"+ (index) +"] ] [[b;#f4f4f4;]"+trimmedString+"], " + obj.datelinetext + " by " + obj.username);
+                            }
+                            else
+                            {
+                                mainTerminal.echo("[ [[b;#2c9995;]"+ (index) +"] ] "+trimmedString+", " + obj.datelinetext + " by " + obj.username);
+                            }
+                        }                        
+                    }
+                },
+                error: function (SOAPResponse) 
+                {
+                    mainTerminal.error("Error: " + SOAPResponse.toXML());
+                }
+            });
+        }
     },
 
     // Change to Thread: sets the current thread according to the index
@@ -301,10 +331,6 @@ var App =
                 var ppInt = parseInt(arguments[1]);
                 perpage = ppInt;
             }
-
-            console.log("listing thread, pagenum=" + pagenum + " perpage=" + perpage);
-            System.threadNav.pagenum = pagenum;
-            System.threadNav.perpage = perpage;
             
             $.soap(
             {
@@ -318,6 +344,8 @@ var App =
                     {
                         System.threadList = [];
                         System.lastList = ListEnum.thread;
+                        System.threadNav.pagenum = pagenum;
+                        System.threadNav.perpage = perpage;
 
                         mainTerminal.echo("Page Number: [[b;#2c9995;]" + pagenum + "] Per Page: [[b;#2c9995;]" + perpage + "]");
 
@@ -384,7 +412,8 @@ var App =
                             ipaddress: $(post[0]).find("IpAddress").text(),
                         };
 
-                        currentPostPageIdx = idx;
+                        System.lastList = ListEnum.post;
+                        System.postIndex = idx;
                         mainTerminal.echo("[[b;#f4f4f4;]#" + idx + " " + obj.username + " at " + obj.datelinetext + "]");
                         mainTerminal.echo(obj.pagetext);
                     },
@@ -393,7 +422,10 @@ var App =
                         mainTerminal.error("Error: " + SOAPResponse.toXML());
                     }
                 });
-
+            }
+            else
+            {
+                mainTerminal.echo("Invalid post index '" + idx + "'");
             }
         }
         else
@@ -442,30 +474,29 @@ var App =
             this.echo("Current Thread : " + commandText(System.currentThread.title) + " [" + System.currentThread.id + "]");
         }
 
-        // if (System.currentPost != undefined && System.currentPost.id != -1)
-        // {
-        //     this.echo("Current Post : " + commandText(System.currentPost.title) + " [" + System.currentPost.id + "]");
-        // }
-        
         this.echo("\n"); 
     },
 
     // Help: prints the system help
     help: function()
     {
-        if (System.loggedIn)
-        {    
-            this.echo("\n");
-            this.echo("|  " + commandText("logout") + "             - Logout");
-            this.echo("\n");
-            this.echo("|  " + commandText("whoami") + "             - Print current user name");
-            this.echo("|  " + commandText("whereami") + "           - Print the current forum, thread and post");
-            this.echo("\n");
-            this.echo("|  " + commandText("lf") + "                 - List the subforums of the current forum");
-            this.echo("|  " + commandText("cf") + "                 - Navigate to a forum by index (example 'cf 1')");
-            this.echo("\n");
-        }
+        mainTerminal.echo("Documentation is available at https://github.com/zethon/vbshell");
+        mainTerminal.echo("Type 'go help' to open this documentation in a new window");
     },
+
+    go: function(command)
+    {
+        if (command == 'help')
+        {
+            var win = window.open('https://github.com/zethon/vbshell', '_blank');
+            win.focus();
+        }
+        else if (command == 'home')
+        {
+            var win = window.open(System.bburl, '_blank');
+            win.focus();
+        }
+    }
 }
 
 var Options = 
@@ -523,7 +554,7 @@ var Options =
                     break;
                 }
 
-                case ListEnum.post:
+                case ListEnum.postlist:
                 {
                     passAlone = false;
                     terminal.exec('sp ' + idx, false);
@@ -541,58 +572,68 @@ var Options =
         }
         else if (command == "n")
         {
+            passAlong = false;
             switch (System.lastList)
             {
                 case ListEnum.thread:
                 {
                     var newidx = System.threadNav.pagenum + 1;
                     terminal.exec('lt ' + newidx + ' ' + System.threadNav.perpage, false);
-                    passAlong = false;
                     break;
                 }
 
-                // case ListEnum.post:
-                // {
-                //     var newidx = currentPostPageIdx + 1;
-                //     terminal.exec('sp ' + newidx, false);
-                //     passAlong = false;
-                //     break;
-                // }
+                case ListEnum.postlist:
+                {
+                    var newidx = System.postPageNav.pagenum + 1;
+                    terminal.exec('lp ' + newidx + ' ' + System.threadNav.perpage, false);
+                    break;
+                }
 
-                default: break;
+                case ListEnum.post:
+                {
+                    var newidx = System.postIndex + 1;
+                    terminal.exec('sp ' + newidx, false);
+                    break;
+                }                
+
+                default: 
+                {
+                    mainTerminal.echo("Invalid list '" + System.lastList + "'");
+                    break;
+                }
             }
         }
         else if (command == "p")
         {
+            passAlong = false;
             switch (System.lastList)
             {
                 case ListEnum.thread:
                 {
                     var newidx = System.threadNav.pagenum - 1;
-                    if (newidx > 0)
-                    {
-                        terminal.exec('lt ' + newidx + ' ' + System.threadNav.perpage, false);
-                        passAlong = false;
-                    }
-                    else
-                    {
-                        mainTerminal.echo("No previous page");
-                        passAlong = true;
-                    }
-                    
-                    
+                    terminal.exec('lt ' + newidx + ' ' + System.threadNav.perpage, false);
                     break;
                 }
 
-                // case ListEnum.post:
-                // {
-                //     var newidx = currentPostPageIdx - 1;
-                //     terminal.exec('sp ' + newidx, false);
-                //     passAlong = false;
-                //     break;
-                // }
+                case ListEnum.postlist:
+                {
+                    var newidx = System.postPageNav.pagenum -1;
+                    terminal.exec('lp ' + newidx + ' ' + System.threadNav.perpage, false);
+                    break;
+                }   
+                
+                case ListEnum.post:
+                {
+                    var newidx = System.postIndex - 1;
+                    terminal.exec('sp ' + newidx, false);
+                    break;
+                }
 
-                default: break;
+                default: 
+                {
+                    mainTerminal.echo("Invalid list '" + System.lastList + "'");
+                    break;
+                }
             }
         }
 
