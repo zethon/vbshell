@@ -9,10 +9,12 @@ $stylevar[htmldoctype]
     <script type="text/javascript" src="./js/jquery.mousewheel-min.js"></script>
     <script type="text/javascript" src="./js/jquery.soap.js"></script>
     <script type="text/javascript" src="./js/jquery.terminal-min.js"></script>
+    <script type="text/javascript" src="./js/optparse.js"></script>
     <script type="text/javascript" src="./js/main.js"></script>
 
 <style type="text/css">
-.terminal, .cmd, .terminal .terminal-output div div, .cmd .prompt {
+.terminal, .cmd, .terminal .terminal-output div div, .cmd .prompt 
+{
     font-size: 14px;
     line-height: 16px;
     font-family: Menlo, Monaco, 'Source Code Pro', FreeMono, monospace;

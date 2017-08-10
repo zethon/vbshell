@@ -122,7 +122,8 @@ var App =
             else if (!isNaN(idx) && (idx-1) <= System.forumList.length)
             {
                 System.currentThread = {};
-                currentPostPageIdx = 1;
+                System.threadNav = { pagenum: 1, perpage: 10};
+                System.postPageNav = { pagenum: 1, perpage: 10 };
                 System.currentForum.id = System.forumList[idx-1].forumid;
                 System.currentForum.title = System.forumList[idx-1].title;
                 this.exec('lf', true);
@@ -434,12 +435,20 @@ var App =
             }
             else
             {
-                mainTerminal.echo("Invalid post index '" + idx + "'");
+                mainTerminal.error("Invalid page number '" + idx + "'");
             }
         }
         else
         {
 
+        }
+    },
+
+    list: function(command)
+    {
+        if (command.match(/^forum[s]*$/i))
+        {
+            this.exec('lf', true);
         }
     },
 
@@ -489,8 +498,11 @@ var App =
     // Help: prints the system help
     help: function()
     {
-        mainTerminal.echo("Documentation is available at https://github.com/zethon/vbshell");
-        mainTerminal.echo("Type 'go help' to open this documentation in a new window");
+        if (System.loggedIn)
+        {    
+            this.echo("Documentation can be found here: https://github.com/zethon/vbshell");
+            this.echo("Type 'go help' to open the help in a separate window");
+        }
     },
 
     go: function(command)
@@ -642,6 +654,27 @@ var Options =
                 {
                     mainTerminal.echo("Invalid list '" + System.lastList + "'");
                     break;
+                }
+            }
+        }
+        else if (command[0] == ':' && command.length > 1)
+        {
+            passAlong = false;
+            switch (command[1])
+            {
+                case '+':
+                {
+                    break;
+                }
+
+                case '-':
+                {
+                    break;
+                }
+
+                default:
+                {
+                    // ok
                 }
             }
         }
