@@ -21,6 +21,8 @@ This shows that the user is logged into a message board named "AMB" and is curre
 
 ### Forums
 
+#### Listing Forums
+
 `lf` - This will return a list of subforums in the current forum. The list will look similar to:
 
     [ AMB ]$ lf
@@ -30,6 +32,7 @@ This shows that the user is logged into a message board named "AMB" and is curre
 
 This shows three subforums. Once this list is returned, the user can then navigate into a specific subforum.
 
+#### Selecting a Forum
 `cf <index>` - Navigates into the forum at the specified `index`. The `index` corresponds to the index in the list resulting from the `lf` command.
 
     [ AMB ]$ cf 2
@@ -41,6 +44,8 @@ Once in the selected forum, the prompt will change automatically.
 
 ### Threads
 
+#### Listing Threads
+
 `lt [<page-number>]` `[<per-page>]` - Lists the threads in the current forum. The default for `<page-number>` is 1 and the default for `<per-page>` is 10. 
 
 Examples: <br/>
@@ -49,6 +54,8 @@ Examples: <br/>
 `lt 2` - displays the second page of threads in the current forum (10 threads per page)<br/>
 `lt 1 20` - displays the first 20 threads in the current forum<br/>
     
+#### Selecting a Thread
+
 `ct <index>` - Selects the thread at the given index.
 
 **Shortcut:** The `ct` can be omitted in the command following `lt`. 
