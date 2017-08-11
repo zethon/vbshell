@@ -111,6 +111,7 @@ var App =
                             // TODO: have a setting ot `cf` switch that will automatically
                             // list the threads when `cf`'ing into a forum
                             mainTerminal.exec('lf', true);
+                            mainTerminal.set_prompt("[[b;#4ef021;]" + System.bbtitle + "]:[[;#00ffff;]{0}]$ ".format(System.currentForum.title));
                         }
                     },
                     error: function (SOAPResponse) 
@@ -126,7 +127,9 @@ var App =
                 System.postPageNav = { pagenum: 1, perpage: 10 };
                 System.currentForum.id = System.forumList[idx-1].forumid;
                 System.currentForum.title = System.forumList[idx-1].title;
+
                 this.exec('lf', true);
+                this.set_prompt("[[b;#4ef021;]" + System.bbtitle + "]:[[;#00ffff;]{0}]$ ".format(System.currentForum.title));               
             }
             else
             {
@@ -517,6 +520,42 @@ var App =
             var win = window.open(System.bburl, '_blank');
             win.focus();
         }
+    },
+
+    reply: function()
+    {
+        var theSubject = "";
+        
+        var history = this.history();
+        history.disable();
+
+        var messageFunc = function(message)
+        {
+            this.echo("SUBJECT: " + theSubject);
+            this.echo("MESSAGE: " + message);
+            this.pop();
+            history.enable();
+        };
+
+        var messageOpts =
+        {
+            prompt: 'Message: '
+        };
+
+        var subjectFunc = function(subject)
+        {
+            theSubject = subject;
+            this.echo(commandText("Enter message test. Press CTRL-D to finish and save. Press CTRL-X to cancel."));
+            this.pop();
+            this.push(messageFunc, messageOpts);
+        };
+
+        var subjectOpts = 
+        {
+            prompt: 'Subject: '
+        };
+
+        this.push(subjectFunc, subjectOpts);
     }
 }
 
@@ -539,18 +578,6 @@ var Options =
     onInit: function(terminal) 
     {
         terminal.set_prompt("[[b;#4ef021;]" + System.bbtitle + "]$ ")
-    },
-
-    onAfterCommand: function(terminal)
-    {
-        if (System.currentForum.id == -1)
-        {
-            terminal.set_prompt("[[b;#4ef021;]" + System.bbtitle + "]$ ")
-        }
-        else
-        {
-            mainTerminal.set_prompt("[[b;#4ef021;]" + System.bbtitle + "]:[[;#00ffff;]{0}]$ ".format(System.currentForum.title));
-        }
     },
 
     onBeforeCommand: function(terminal, command)
