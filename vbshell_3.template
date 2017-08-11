@@ -24,7 +24,7 @@ $stylevar[htmldoctype]
 
 </head>
 
-<body class="terminal">
+<body class="terminal" id="terminal">
 <if condition="$show['member']">
 <script>
     System.loggedIn = true;
@@ -36,6 +36,5 @@ $stylevar[htmldoctype]
     System.bburl = '$vboptions[bburl]';
     System.bbtitle = '$vboptions[bbtitle]';
 </script>
-<div class="theTerminal"/>
 </body>
 </html>
