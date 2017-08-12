@@ -7,6 +7,12 @@ A terminal shell plugin for vBulletin
 
 This plugin for vBulletin allows users to navigate the board through a command line interface in the browser. This idea is based off of an actual app I write and maintain that does the same thing (see [https://github.com/lulzapps/Owl](https://github.com/lulzapps/Owl)).
 
+## Installation
+
+This plugin requires the PHP SOAP library, NuSOAP (http://nusoap.sourceforge.net/). Currently this plugin looks for it installed in the root.
+
+For vBulletin 3x, upload everything in the /upload folder. Create a new template called `shell_main`. The shell should be available in the `http://<link-to-your-forum>/shell`. 
+
 ## Navigation
 
 The shell maintains a state of the current forum and thread. 
