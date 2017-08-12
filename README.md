@@ -17,9 +17,9 @@ For vBulletin 3x, upload everything in the /upload folder. Create a new template
 
 The shell maintains a state of the current forum and thread. 
 
-`whereami` - This will print out the name of the current forum and thread, as well as preview text of the last viewed post.
+`whereami` - This will print out the name of the current forum and thread.
 
-However, the name of the board and the current forum are displayed in the prompt. For example:
+The name of the board and the current forum are also displayed in the prompt. For example:
 
     [ AMB:General Topics ]$
 
