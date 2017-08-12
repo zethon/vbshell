@@ -350,8 +350,8 @@ var App =
     // List Threads: lists the threads in the current forum
     lt : function()
     {
-        var showids = hasArg('--ids', arguments);
-        var showstickes = hasArg('--stickies', arguments);
+        var showids = (hasArg('--ids', arguments) || hasArg('--showids', arguments));
+        var showstickes = (hasArg('--stickies', arguments) || hasArg('--sticky', arguments));
 
         if (System.currentForum.id != -1) 
         {
@@ -635,11 +635,6 @@ var App =
 
         this.push(subjectFunc, subjectOpts);
     }
-
-    // threadinfo: function(command)
-    // {
-
-    // }
 }
 
 var Options = 
@@ -667,7 +662,7 @@ var Options =
     {
         var passAlong = true;
         var idx = parseInt(command);
-        if (!isNaN(idx))
+        if (!isNaN(idx) && idx > 0)
         {
             switch (System.lastList)
             {
@@ -685,6 +680,7 @@ var Options =
                     break;
                 }
 
+                case ListEnum.post:
                 case ListEnum.postlist:
                 {
                     passAlone = false;
@@ -694,12 +690,26 @@ var Options =
 
                 default: break;                
             }
+
             return false;
         }
         else if (command == "..")
         {
             passAlong = false;
             terminal.exec('cf ..', false);
+        }
+        else if (command == "/")
+        {
+            System.currentForum = {};
+            System.currentForum.id = -1;
+            System.currentForum.title = "";
+
+            System.currentThread = {};
+            System.currentThread.id = -1;
+            System.currentThread.title = "";
+            System.postIndex = 1;
+            terminal.exec('lf', false);
+            passAlong = false;
         }
         else if (command == "n")
         {
