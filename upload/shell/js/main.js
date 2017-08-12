@@ -350,7 +350,8 @@ var App =
     // List Threads: lists the threads in the current forum
     lt : function()
     {
-        var showids = hasArg('--showids', arguments);
+        var showids = hasArg('--ids', arguments);
+        var showstickes = hasArg('--stickies', arguments);
 
         if (System.currentForum.id != -1) 
         {
@@ -379,14 +380,17 @@ var App =
             if (arguments.length > 1)
             {
                 var ppInt = parseInt(arguments[1]);
-                perpage = ppInt;
+                if (!isNaN(ppInt))
+                {
+                    perpage = ppInt;
+                }
             }
             
             $.soap(
             {
                 url: '/soapservice.php/',
                 method: 'ListThreads',
-                data: { ForumId: System.currentForum.id, PageNumber: pagenum, PerPage: perpage },
+                data: { ForumId: System.currentForum.id, PageNumber: pagenum, PerPage: perpage, ShowStickies: (showstickes ? 1 : 0) },
                 success: function (response) 
                 {
                     var items = response.toXML().documentElement.getElementsByTagName('item');
@@ -401,7 +405,6 @@ var App =
 
                         for (var i=0; i < items.length; i++)
                         {
-                            console.log(items[i]);
                             var obj = 
                             {
                                 threadid: $(items[i]).find("ThreadID").text(),
@@ -410,20 +413,30 @@ var App =
                                 lastposter: $(items[i]).find("LastPoster").text(),
                                 replycount: parseInt($(items[i]).find("ReplyCount").text()),
                                 hasnew: ($(items[i]).find("IsNew").text() == "true"),
-                                datelinetext: $(items[i]).find("DateLineText").text()
+                                datelinetext: $(items[i]).find("DateLineText").text(),
+                                sticky: ($(items[i]).find("Sticky").text() == "true"),
                             };
 
                             System.threadList.push(obj);
+                            var indexText = "[ [[b;#2c9995;]"+ (i+1) +"] ] ";
                             var dateText = moment.unix(obj.lastpost).fromNow();
-                            var idtext = showids ? " ([[b;#2c9995;]#" + obj.threadid + "]) " : "";
-                            if (obj.hasnew)
+                            var idtext = showids ? " ([[b;#2c9995;]#" + obj.threadid + "])" : "";
+                            var lastPosterText = "[[b;#f4f4f4;]" + obj.lastposter + "]";
+
+                            var textColor = "#aaa";
+                            if (obj.sticky)
                             {
-                                mainTerminal.echo("[ [[b;#2c9995;]"+ (i+1) +"] ] [[b;#f4f4f4;]"+obj.title+"]" + idtext + ", " + obj.replycount + " replies, " + dateText + " by " + obj.lastposter);
+                                textColor = (obj.hasnew ? "#ffff00" : "#AAAA00");
                             }
                             else
                             {
-                                mainTerminal.echo("[ [[b;#2c9995;]"+ (i+1) +"] ] " + obj.title + idtext + ", " + obj.replycount + " replies, " + dateText + " by " + obj.lastposter);
+                                textColor = (obj.hasnew ? "#f4f4f4" : "inherit");
                             }
+
+                            var titleText = "[[b;" + textColor + ";]" + obj.title + "]";
+                            titleText = "\"" + titleText + "\"";
+                                
+                            mainTerminal.echo(indexText + titleText + idtext + ", " + obj.replycount + " replies, " + dateText + " by " + obj.lastposter);
                         }
                     }
                 },

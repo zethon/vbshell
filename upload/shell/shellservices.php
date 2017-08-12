@@ -45,7 +45,7 @@ $server->register(
 
 $server->register(
     'ListThreads',
-    array('ForumID'=>'xsd:int','PageNumber'=>'xsd:int','PerPage'=>'xsd:int'),
+    array('ForumID'=>'xsd:int','PageNumber'=>'xsd:int','PerPage'=>'xsd:int','ShowStickies'=>'xsd:boolean'),
     array('return'=>'tns:ThreadListResult'),
     $namespace,
     false,

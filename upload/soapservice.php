@@ -454,10 +454,12 @@ function ListPosts($threadid,$pagenumber,$perpage)
     return $retval;
 }
 
-function ListThreads($forumid,$pagenumber,$perpage)
+function ListThreads($forumid,$pagenumber,$perpage, $showstickies)
 {
     global $db,$vbulletin,$server,$structtypes,$lastpostarray;
-    
+    $threadlist = array();
+    $userid = $vbulletin->userinfo['userid'];
+
     // get the total threads count    
     $threadcount = $db->query_first("SELECT threadcount FROM " . TABLE_PREFIX . "forum WHERE (forumid = $forumid);");
     
@@ -466,11 +468,58 @@ function ListThreads($forumid,$pagenumber,$perpage)
         $forumperms = fetch_permissions($forumid);
         if (!($forumperms & $vbulletin->bf_ugp_forumpermissions['canview']))
         {
-            // TODO: handle this properly
-            print_error_xml('no_permission_fetch_threadsxml');
-        }            
+            $result['Code'] = 1;
+            $result['Text'] = 'no_permission_fetch_threadxml';
+            return array('Result'=>$result);
+        }
+
+        if ($showstickies)
+        {
+            $threadssql = "
+                SELECT 
+                    thread.threadid, 
+                    thread.title AS threadtitle, 
+                    thread.forumid, 
+                    thread.lastpost, 
+                    thread.lastposter, 
+                    thread.lastpostid, 
+                    thread.replycount,
+                    threadread.readtime AS threadread,
+                    forumread.readtime as forumread,
+                    subscribethread.subscribethreadid AS subscribethreadid
+                FROM " . TABLE_PREFIX . "thread AS thread    
+                LEFT JOIN " . TABLE_PREFIX . "threadread AS threadread ON (threadread.threadid = thread.threadid AND threadread.userid = $userid)         
+                LEFT JOIN " . TABLE_PREFIX . "forumread AS forumread ON (thread.forumid = forumread.forumid AND forumread.userid = $userid)         
+                LEFT JOIN " . TABLE_PREFIX . "subscribethread AS subscribethread ON (thread.threadid = subscribethread.threadid AND subscribethread.userid = $userid)        
+                WHERE
+                    thread.forumid = $forumid
+                    AND thread.sticky=1
+                ORDER BY 
+                    lastpost DESC
+                LIMIT
+                    500
+            ";
+
+            $threads = $db->query_read_slave($threadssql);
+            while ($thread = $db->fetch_array($threads))
+            {   
+                $thread['issubscribed'] = $thread['subscribethreadid'] > 0;
+                
+                $thread['isnew'] = true;        
+                if ($thread['forumread'] >= $thread['lastpost'] || $thread['threadread'] >= $thread['lastpost'] || (TIMENOW - ($vbulletin->options['markinglimit'] * 86400)) > $thread['lastpost'] )
+                {
+                    $thread['isnew'] = false;
+                }
+                
+                $thread['sticky'] = true;
+                $thread['threadtitle'] = unhtmlspecialchars($thread['threadtitle'],true);   
+                $thread['title'] = unhtmlspecialchars($thread['threadtitle'],true);
+                $thread['datelinetext'] = vbdate($vbulletin->options['dateformat'],$thread['lastpost'],true,true,false)." ".vbdate($vbulletin->options['timeformat'],$thread['lastpost']);
+                $thread = ConsumeArray($thread,$structtypes['Thread']);            
+                array_push($threadlist,$thread);            
+            }    
+        }
         
-        $userid = $vbulletin->userinfo['userid'];
         $limitlower = ($pagenumber - 1) * $perpage;
         
         $getthreadidssql = ("
@@ -498,29 +547,31 @@ function ListThreads($forumid,$pagenumber,$perpage)
             $ids .= ',' . $thread['threadid'];
         }
     
-            $threadssql = "
-                SELECT 
-                    thread.threadid, 
-                    thread.title AS threadtitle, 
-                    thread.forumid, 
-                    thread.lastpost, 
-                    thread.lastposter, 
-                    thread.lastpostid, 
-                    thread.replycount,
-                    threadread.readtime AS threadread,
-                    forumread.readtime as forumread,
-                    subscribethread.subscribethreadid AS subscribethreadid
-                FROM " . TABLE_PREFIX . "thread AS thread    
-                LEFT JOIN " . TABLE_PREFIX . "threadread AS threadread ON (threadread.threadid = thread.threadid AND threadread.userid = $userid)         
-                LEFT JOIN " . TABLE_PREFIX . "forumread AS forumread ON (thread.forumid = forumread.forumid AND forumread.userid = $userid)         
-                LEFT JOIN " . TABLE_PREFIX . "subscribethread AS subscribethread ON (thread.threadid = subscribethread.threadid AND subscribethread.userid = $userid)        
-                WHERE thread.threadid IN (0$ids)
-                ORDER BY lastpost DESC
-            ";
+        $threadssql = "
+            SELECT 
+                thread.threadid, 
+                thread.title AS threadtitle, 
+                thread.forumid, 
+                thread.lastpost, 
+                thread.lastposter, 
+                thread.lastpostid, 
+                thread.replycount,
+                threadread.readtime AS threadread,
+                forumread.readtime as forumread,
+                subscribethread.subscribethreadid AS subscribethreadid
+            FROM " . TABLE_PREFIX . "thread AS thread    
+            LEFT JOIN " . TABLE_PREFIX . "threadread AS threadread ON (threadread.threadid = thread.threadid AND threadread.userid = $userid)         
+            LEFT JOIN " . TABLE_PREFIX . "forumread AS forumread ON (thread.forumid = forumread.forumid AND forumread.userid = $userid)         
+            LEFT JOIN " . TABLE_PREFIX . "subscribethread AS subscribethread ON (thread.threadid = subscribethread.threadid AND subscribethread.userid = $userid)        
+            WHERE 
+                thread.threadid IN (0$ids)
+            ORDER BY 
+                lastpost DESC
+            LIMIT
+                500
+        ";
             
         $threads = $db->query_read_slave($threadssql);        
-        $threadlist = array();
-        
         while ($thread = $db->fetch_array($threads))
         {   
             $thread['issubscribed'] = $thread['subscribethreadid'] > 0;
@@ -530,12 +581,11 @@ function ListThreads($forumid,$pagenumber,$perpage)
             {
                 $thread['isnew'] = false;
             }
-            
+
+            $thread['sticky'] = false;
             $thread['threadtitle'] = unhtmlspecialchars($thread['threadtitle'],true);   
             $thread['title'] = unhtmlspecialchars($thread['threadtitle'],true);
-            
             $thread['datelinetext'] = vbdate($vbulletin->options['dateformat'],$thread['lastpost'],true,true,false)." ".vbdate($vbulletin->options['timeformat'],$thread['lastpost']);
-            
             $thread = ConsumeArray($thread,$structtypes['Thread']);            
             array_push($threadlist,$thread);            
         }        

@@ -46,7 +46,7 @@ Once in the selected forum, the prompt will change automatically.
 
 #### Listing Threads
 
-`lt [<page-number>]` `[<per-page>] [--showids]` - Lists the threads in the current forum. The default for `<page-number>` is 1 and the default for `<per-page>` is 10. 
+`lt [<page-number>]` `[<per-page>] [--ids] [--stickies]` - Lists the threads in the current forum. The default for `<page-number>` is 1 and the default for `<per-page>` is 10. The `--ids` parameter will show the thread IDs. The `--stickies` will show sticky threads.
 
 Examples: <br/>
 

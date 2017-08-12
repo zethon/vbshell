@@ -39,6 +39,7 @@ $structtypes['Thread'] = array(
         'IsNew' => array('IsNew', 'type'=>'xsd:boolean'),
         'DateLine' => array('DateLine','type'=>'xsd:int'), 
         'DateLineText' => array('DateLineText','type'=>'xsd:string'),
+        'Sticky' => array('Sticky', 'type'=>'xsd:boolean'),
     ); 
     
 $structtypes['Post'] = array(
