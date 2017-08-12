@@ -507,7 +507,11 @@ var App =
                         {
                             System.lastList = ListEnum.post;
                             System.postIndex = idx;
-                            mainTerminal.echo("[[b;#f4f4f4;]#" + idx + " " + obj.username + " at " + obj.datelinetext + "]");
+
+                            var indexText = commandText('#' + (idx + 1));
+                            var dateText = moment.unix(obj.dateline).fromNow();
+
+                            mainTerminal.echo(indexText + " [[u;#f4f4f4;]" + obj.username + " posted " + dateText + "]");
                             mainTerminal.echo(obj.pagetext);
                         }
                         else
