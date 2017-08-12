@@ -56,6 +56,19 @@ var titleText = function(text)
     return "[[u;inherit;]" + text + "]";
 }
 
+var hasArg = function(argname, args)
+{
+    for (var i=0; i < args.length; i++)
+    {
+        if (args[i] == argname)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 var App = 
 {
     // Welcome: prints the welcome message
@@ -337,6 +350,8 @@ var App =
     // List Threads: lists the threads in the current forum
     lt : function()
     {
+        var showids = hasArg('--showids', arguments);
+
         if (System.currentForum.id != -1) 
         {
             var pagenum = 1;
@@ -386,11 +401,12 @@ var App =
 
                         for (var i=0; i < items.length; i++)
                         {
+                            console.log(items[i]);
                             var obj = 
                             {
                                 threadid: $(items[i]).find("ThreadID").text(),
                                 title: $(items[i]).find("ThreadTitle").text(),
-                                lastpost: $(items[i]).find("LastPoster").text(),
+                                lastpost: parseInt($(items[i]).find("LastPost").text()),
                                 lastposter: $(items[i]).find("LastPoster").text(),
                                 replycount: parseInt($(items[i]).find("ReplyCount").text()),
                                 hasnew: ($(items[i]).find("IsNew").text() == "true"),
@@ -398,13 +414,15 @@ var App =
                             };
 
                             System.threadList.push(obj);
+                            var dateText = moment.unix(obj.lastpost).fromNow();
+                            var idtext = showids ? " ([[b;#2c9995;]#" + obj.threadid + "]) " : "";
                             if (obj.hasnew)
                             {
-                                mainTerminal.echo("[ [[b;#2c9995;]"+ (i+1) +"] ] [[b;#f4f4f4;]"+obj.title+"], " + obj.replycount + " replies, " + obj.datelinetext + " by " + obj.lastposter);
+                                mainTerminal.echo("[ [[b;#2c9995;]"+ (i+1) +"] ] [[b;#f4f4f4;]"+obj.title+"]" + idtext + ", " + obj.replycount + " replies, " + dateText + " by " + obj.lastposter);
                             }
                             else
                             {
-                                mainTerminal.echo("[ [[b;#2c9995;]"+ (i+1) +"] ] "+obj.title+", " + obj.replycount + " replies, " + obj.datelinetext + " by " + obj.lastposter);
+                                mainTerminal.echo("[ [[b;#2c9995;]"+ (i+1) +"] ] " + obj.title + idtext + ", " + obj.replycount + " replies, " + dateText + " by " + obj.lastposter);
                             }
                         }
                     }
@@ -602,6 +620,11 @@ var App =
 
         this.push(subjectFunc, subjectOpts);
     }
+
+    // threadinfo: function(command)
+    // {
+
+    // }
 }
 
 var Options = 
