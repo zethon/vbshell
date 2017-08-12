@@ -106,7 +106,6 @@ var App =
                             System.threadNav = { pagenum: 1, perpage: 10};
                             System.postPageNav = { pagenum: 1, perpage: 10 };
                             System.postIndex = 1;
-                            postIndx = 1;
 
                             // TODO: have a setting ot `cf` switch that will automatically
                             // list the threads when `cf`'ing into a forum
@@ -298,9 +297,39 @@ var App =
                 System.postIndex = 1;
                 this.exec('lp');
             }
-            else
+            else if (command.match(/id\=(\d+)/))
             {
-                mainTerminal.error("Invalid index");
+                var id = command.match(/id\=(\d+)/)[1];
+                console.log(id);
+
+                $.soap(
+                {
+                    url: '/soapservice.php/',
+                    method: 'GetThread',
+                    data: { ThreadID: id },
+                    success: function (response) 
+                    {
+                        var threadInfo = response.toXML().documentElement.getElementsByTagName('Thread');
+                        var forumInfo = response.toXML().documentElement.getElementsByTagName('Forum');
+                        if (threadInfo.length > 0 && forumInfo.length > 0)
+                        {
+                            System.currentForum = {};
+                            System.currentForum.id = parseInt($(threadInfo[0]).find("ForumID").text());
+                            System.currentForum.title = $(threadInfo[0]).find("Title").text();
+
+                            System.currentThread = {};
+                            System.currentThread.id = parseInt($(threadInfo[0]).find("ThreadID").text());
+                            System.currentThread.title = $(threadInfo[0]).find("ThreadTitle").text();
+                            System.postIndex = 1;
+
+                            mainTerminal.exec('lp');
+                        }
+                    },
+                    error: function (response) 
+                    {
+                        mainTerminal.error("Error: " + response.toXML());
+                    }
+                }); 
             }
         }
     },
@@ -525,16 +554,32 @@ var App =
     reply: function()
     {
         var theSubject = "";
+        var theMessage = "";
         
         var history = this.history();
         history.disable();
 
+        var confirmFun = function(command)
+        {
+            if (command.match(/^(y|yes)$/i)) 
+            {
+                console.log("SUBJECT: " + theSubject);
+                console.log("MESSAGE: " + theMessage);
+            } 
+            this.pop();
+            history.enable();       
+        };
+
+        var confirmOpt = 
+        {
+            prompt: commandText('Are you sure (yes/no)? ')
+        };
+
         var messageFunc = function(message)
         {
-            this.echo("SUBJECT: " + theSubject);
-            this.echo("MESSAGE: " + message);
+            theMessage = message;
             this.pop();
-            history.enable();
+            this.push(confirmFun, confirmOpt);
         };
 
         var messageOpts =
@@ -545,7 +590,7 @@ var App =
         var subjectFunc = function(subject)
         {
             theSubject = subject;
-            this.echo(commandText("Enter message test. Press CTRL-D to finish and save. Press CTRL-X to cancel."));
+            // this.echo(commandText("Enter message. Press CTRL-D to finish and save. Press CTRL-X to cancel."));
             this.pop();
             this.push(messageFunc, messageOpts);
         };

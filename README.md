@@ -56,7 +56,7 @@ Examples: <br/>
     
 #### Selecting a Thread
 
-`ct <index>` - Selects the thread at the given index.
+`ct (<index>|id=<thread-id>)` - Selects a thread. The `<index>` is the index number of the thread from a `lt` command issued beforehand, and `<thread-id>` is the message board's (numeric) ID for the thread.
 
 **Shortcut:** The `ct` can be omitted in the command following `lt`. 
 

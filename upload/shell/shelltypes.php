@@ -79,6 +79,7 @@ $structtypes['GetPostResult']  = array(
 $structtypes['GetThreadResult']  = array(
         'Result' => array('name'=>'Result','type'=>'tns:RequestResult'),
         'Thread' => array('name'=>'Thread','type'=>'tns:Thread'),
+        'Forum' => array('name'=>'Forum','type'=>'tns:Forum'),
     );   
     
 $structtypes['PostReplyResult']  = array(

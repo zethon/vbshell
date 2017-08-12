@@ -192,7 +192,7 @@ function GetPostNotifications($dodelete)
     return $retval;
 }
 
-function GetThread($who,$threadid)
+function GetThread($threadid)
 {
     global $db,$vbulletin,$server,$structtypes,$lastpostarray;
     
@@ -204,11 +204,15 @@ function GetThread($who,$threadid)
     $forumperms = fetch_permissions($thread['forumid']);
     if (!($forumperms & $vbulletin->bf_ugp_forumpermissions['canview']) OR !($forumperms & $vbulletin->bf_ugp_forumpermissions['canviewthreads']))
     {
-        print_error_xml('no_permission_fetch_threadxml');
+        $result['Code'] = 1;
+        $result['Text'] = 'no_permission_fetch_threadxml';
+        return array('Result'=>$result);
     }
     if (!($forumperms & $vbulletin->bf_ugp_forumpermissions['canviewothers']) AND ($thread['postuserid'] != $vbulletin->userinfo['userid'] OR $vbulletin->userinfo['userid'] == 0))
     {
-        print_error_xml('no_permission_fetch_threadxml');
+        $result['Code'] = 1;
+        $result['Text'] = 'no_permission_fetch_threadxml2';
+        return array('Result'=>$result);        
     }    
     
     // *********************************************************************************
@@ -235,7 +239,8 @@ function GetThread($who,$threadid)
     // TODO: Remove this HACK!
     $thread['threadtitle'] = $thread['title'] = unhtmlspecialchars($threadinfo['title'],true);
     
-    $retval['Thread'] = ConsumeArray($thread,$structtypes['Thread']);                 
+    $retval['Thread'] = ConsumeArray($thread, $structtypes['Thread']);
+    $retval['Forum'] = ConsumeArray($foruminfo, $structtypes['Forum']);
     
     $result['RemoteUser'] = ConsumeArray($vbulletin->userinfo,$structtypes['RemoteUser']); 
     $retval['Result'] = $result;

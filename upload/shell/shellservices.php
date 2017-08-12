@@ -78,7 +78,7 @@ $server->register(
 
 $server->register(
     'GetThread',
-    array('UserCredentials'=>'tns:UserCredentials','ThreadID'=>'xsd:int'),
+    array('ThreadID'=>'xsd:int'),
     array('return'=>'tns:GetThreadResult'),
     $namespace,
     false,
