@@ -454,6 +454,8 @@ var App =
 
     sp: function(command)
     {
+        var showBBCode = hasArg('--bbcode', arguments);
+
         if (command != undefined)
         {
             var idx = parseInt(command);
@@ -463,7 +465,7 @@ var App =
                 {
                     url: '/soapservice.php/',
                     method: 'GetPostByIndex',
-                    data: { ThreadID: System.currentThread.id, Index: idx, ShowBBCode: false },
+                    data: { ThreadID: System.currentThread.id, Index: idx, ShowBBCode: (showBBCode ? 1 : 0) },
                     success: function (response) 
                     {
                         var post = response.toXML().documentElement.getElementsByTagName('Post');

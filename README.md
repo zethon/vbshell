@@ -60,3 +60,8 @@ Examples: <br/>
 
 **Shortcut:** The `ct` can be omitted in the command following `lt`. 
 
+### Posts
+
+#### Viewing Posts
+
+`sp <index> [--bbcode]` - Displays a posts from the list of posts returned in a previous `lp` command. By default all BBCode is stripped from the text. The `--bbcode` option will display the unparsed BBCode.
