@@ -250,6 +250,10 @@ var App =
                         System.postPageNav.pagenum = pagenum;
                         System.postPageNav.perpage = perpage;
 
+                        var totalpages = Math.floor(System.currentThread.replycount / perpage) + 1;
+
+                        mainTerminal.echo("Page [[b;#2c9995;]" + pagenum + "] of [[b;#2c9995;]" + totalpages + "]");
+
                         for (var i=0; i < items.length; i++)
                         {
                             var obj = 
@@ -307,6 +311,7 @@ var App =
                 System.currentThread = {};
                 System.currentThread.id = t.threadid;
                 System.currentThread.title = t.title;
+                System.currentThread.replycount = t.replycount;
                 System.postIndex = 1;
                 this.exec('lp');
             }
@@ -326,6 +331,7 @@ var App =
                         var forumInfo = response.toXML().documentElement.getElementsByTagName('Forum');
                         if (threadInfo.length > 0 && forumInfo.length > 0)
                         {
+                            console.log(threadInfo[0]);
                             System.currentForum = {};
                             System.currentForum.id = parseInt($(threadInfo[0]).find("ForumID").text());
                             System.currentForum.title = $(threadInfo[0]).find("Title").text();
@@ -333,6 +339,7 @@ var App =
                             System.currentThread = {};
                             System.currentThread.id = parseInt($(threadInfo[0]).find("ThreadID").text());
                             System.currentThread.title = $(threadInfo[0]).find("ThreadTitle").text();
+                            System.currentThread.replycount = parseInt($(threadInfo[0]).find("ReplyCount").text());
                             System.postIndex = 1;
 
                             mainTerminal.exec('lp');
