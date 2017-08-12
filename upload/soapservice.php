@@ -238,7 +238,7 @@ function GetThread($threadid)
     
     // TODO: Remove this HACK!
     $thread['threadtitle'] = $thread['title'] = unhtmlspecialchars($threadinfo['title'],true);
-    
+
     $retval['Thread'] = ConsumeArray($thread, $structtypes['Thread']);
     $retval['Forum'] = ConsumeArray($foruminfo, $structtypes['Forum']);
     

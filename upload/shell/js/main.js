@@ -157,6 +157,8 @@ var App =
     // List Forums: lists the sub forums of the current forum
     lf: function()
     {
+        var showids = (hasArg('--ids', arguments) || hasArg('--showids', arguments));
+
         $.soap(
         {
             url: '/soapservice.php/',
@@ -180,13 +182,15 @@ var App =
                         var obj = {title: title, forumid: forumid, hasnew: hasnew, iscurrent: iscurrent};
                         System.forumList.push(obj);
                         
+                        var idtext = showids ? " ([[b;#2c9995;]#" + forumid + "])" : "";
+
                         if (hasnew)
                         {
-                            mainTerminal.echo("[ " + "[[b;#2c9995;]"+ (i+1) +"] ] [[b;#f4f4f4;]"+title+"]");
+                            mainTerminal.echo("[ " + "[[b;#2c9995;]"+ (i+1) +"] ] [[b;#f4f4f4;]"+title+"]" + idtext);
                         }
                         else
                         {
-                            mainTerminal.echo("[ " + "[[b;#2c9995;]"+ (i+1) +"] ] "+title+"");
+                            mainTerminal.echo("[ " + "[[b;#2c9995;]"+ (i+1) +"] ] "+title + "" + idtext);
                         }
                     }
 
@@ -205,6 +209,10 @@ var App =
     // List Posts: lists the posts in the current thread
     lp: function()
     {
+        var showforum = hasArg('--showforum', arguments);
+        var showthread = hasArg('--showthread', arguments);
+        var showids = (hasArg('--ids', arguments) || hasArg('--showids', arguments));
+
         if (System.currentForum.id != -1) 
         {
             var pagenum = 1;
@@ -214,17 +222,9 @@ var App =
             if (arguments.length > 0)
             {
                 var pnInt = parseInt(arguments[0]);
-                if (!isNaN(pnInt))
+                if (!isNaN(pnInt) && pnInt > 0)
                 {
-                    if (pnInt > 0)
-                    {                        
-                        pagenum = pnInt;
-                    }
-                    else
-                    {
-                        mainTerminal.error("Invalid page number");
-                        return;
-                    }
+                    pagenum = pnInt;
                 }
             }
 
@@ -232,7 +232,10 @@ var App =
             if (arguments.length > 1)
             {
                 var ppInt = parseInt(arguments[1]);
-                perpage = ppInt;
+                if (!isNaN(ppInt) && ppInt > 0)
+                {
+                    perpage = ppInt;
+                }
             }
 
             $.soap(
@@ -250,8 +253,17 @@ var App =
                         System.postPageNav.pagenum = pagenum;
                         System.postPageNav.perpage = perpage;
 
-                        var totalpages = Math.floor(System.currentThread.replycount / perpage) + 1;
+                        if (showforum)
+                        {
+                            mainTerminal.echo("Current Forum: " + commandText(System.currentForum.title));
+                        }
 
+                        if (showthread)
+                        {
+                            mainTerminal.echo("Current Thread: " + commandText(System.currentThread.title));
+                        }
+
+                        var totalpages = Math.floor(System.currentThread.replycount / perpage) + 1;
                         mainTerminal.echo("Page [[b;#2c9995;]" + pagenum + "] of [[b;#2c9995;]" + totalpages + "]");
 
                         for (var i=0; i < items.length; i++)
@@ -270,6 +282,7 @@ var App =
 
                             System.postList.push(obj);
 
+                            var idtext = showids ? " ([[b;#2c9995;]#" + obj.postid + "])" : "";
                             var trimmedString = obj.pagetext.substr(0, 60).replace(/\n|\r/g, "");
                             trimmedString = trimmedString.substr(0, Math.min(trimmedString.length, trimmedString.lastIndexOf(" ")))
                             trimmedString = "\"" + trimmedString + "\"";
@@ -277,11 +290,11 @@ var App =
                             var index = (i+1) + (perpage * (pagenum - 1));
                             if (obj.isnew)
                             {
-                                mainTerminal.echo("[ [[b;#2c9995;]"+ (index) +"] ] [[b;#f4f4f4;]"+trimmedString+"], " + obj.datelinetext + " by " + obj.username);
+                                mainTerminal.echo("[ [[b;#2c9995;]"+ (index) +"] ] [[b;#f4f4f4;]"+trimmedString+"] " + idtext + ", " + obj.datelinetext + " by " + obj.username);
                             }
                             else
                             {
-                                mainTerminal.echo("[ [[b;#2c9995;]"+ (index) +"] ] "+trimmedString+", " + obj.datelinetext + " by " + obj.username);
+                                mainTerminal.echo("[ [[b;#2c9995;]"+ (index) +"] ] " + trimmedString + idtext + ", " + obj.datelinetext + " by " + obj.username);
                             }
                         }                        
                     }
@@ -298,6 +311,9 @@ var App =
     // `ct <index>` - Pass the index of the thread from the previous `lt`
     ct: function(command)
     {
+        var showforum = hasArg('--showforum', arguments);
+        var showthread = hasArg('--showthread', arguments);
+
         if (command != undefined)
         {
             var idx = parseInt(command);
@@ -313,12 +329,13 @@ var App =
                 System.currentThread.title = t.title;
                 System.currentThread.replycount = t.replycount;
                 System.postIndex = 1;
-                this.exec('lp');
+                this.exec('lp ' + (showforum ? '--showforum':'') + ' ' + (showthread ? '--showthread':''));
             }
             else if (command.match(/id\=(\d+)/))
             {
                 var id = command.match(/id\=(\d+)/)[1];
-                console.log(id);
+                showforum = true;
+                showthread = true;
 
                 $.soap(
                 {
@@ -331,18 +348,17 @@ var App =
                         var forumInfo = response.toXML().documentElement.getElementsByTagName('Forum');
                         if (threadInfo.length > 0 && forumInfo.length > 0)
                         {
-                            console.log(threadInfo[0]);
                             System.currentForum = {};
-                            System.currentForum.id = parseInt($(threadInfo[0]).find("ForumID").text());
-                            System.currentForum.title = $(threadInfo[0]).find("Title").text();
+                            System.currentForum.id = parseInt($(forumInfo[0]).find("ForumID").text());
+                            System.currentForum.title = $(forumInfo[0]).find("Title").text();
 
                             System.currentThread = {};
                             System.currentThread.id = parseInt($(threadInfo[0]).find("ThreadID").text());
                             System.currentThread.title = $(threadInfo[0]).find("ThreadTitle").text();
                             System.currentThread.replycount = parseInt($(threadInfo[0]).find("ReplyCount").text());
                             System.postIndex = 1;
-
-                            mainTerminal.exec('lp');
+                            
+                            mainTerminal.exec('lp ' + (showforum ? '--showforum':'') + ' ' + (showthread ? '--showthread':''));
                         }
                     },
                     error: function (response) 
