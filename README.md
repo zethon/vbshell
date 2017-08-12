@@ -11,7 +11,7 @@ This plugin for vBulletin allows users to navigate the board through a command l
 
 This plugin requires the PHP SOAP library, NuSOAP (http://nusoap.sourceforge.net/). Currently this plugin looks for it installed in the root.
 
-For vBulletin 3x, upload everything in the /upload folder. Create a new template called `shell_main`. The shell should be available in the `http://<link-to-your-forum>/shell`. 
+For vBulletin 3x, upload everything in the /upload folder. Create a new template called `shell_main` and copy the contents of `vbshell_3.template` into the template. The shell should be available in the `http://<link-to-your-forum>/shell`. 
 
 ## Navigation
 
